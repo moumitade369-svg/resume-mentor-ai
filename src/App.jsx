@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { extractTextFromFile } from './services/fileParser';
 import { analyzeResume } from './services/gemini';
+import { generatePDFReport } from './services/pdfGenerator';
 import './App.css';
 
 function App() {
@@ -12,6 +13,9 @@ function App() {
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
   const [error, setError] = useState('');
@@ -95,6 +99,18 @@ function App() {
       setError(err.message || 'An error occurred during analysis.');
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    setIsDownloadingPDF(true);
+    try {
+      const candidateName = file?.name?.replace(/\.[^/.]+$/, "") || "Candidate";
+      generatePDFReport(candidateName, analysisResult);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+    } finally {
+      setIsDownloadingPDF(false);
     }
   };
 
@@ -185,20 +201,32 @@ function App() {
 
         {analysisResult && !isAnalyzing && (
           <section className="results-section glass">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h2 style={{ fontSize: '1.5rem', color: '#a78bfa' }}>Analysis Complete</h2>
-              <button 
-                className="btn-primary" 
-                style={{ width: 'auto', padding: '0.5rem 1rem' }}
-                onClick={() => setAnalysisResult('')}
-              >
-                Analyze Another Resume
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn-secondary" 
+                  style={{ width: 'auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'transparent', border: '1px solid #a78bfa', color: '#a78bfa', borderRadius: '8px', cursor: 'pointer' }}
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloadingPDF}
+                >
+                  <Download size={18} />
+                  {isDownloadingPDF ? 'Generating PDF...' : 'Download PDF Report'}
+                </button>
+                <button 
+                  className="btn-primary" 
+                  style={{ width: 'auto', padding: '0.5rem 1rem' }}
+                  onClick={() => setAnalysisResult('')}
+                >
+                  Analyze Another Resume
+                </button>
+              </div>
             </div>
             
             <div className="markdown-body">
               <ReactMarkdown>{analysisResult}</ReactMarkdown>
             </div>
+
           </section>
         )}
       </main>
