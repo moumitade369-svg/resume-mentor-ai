@@ -179,7 +179,7 @@ function App() {
         {isAnalyzing && (
           <div className="loader">
             <div className="spinner"></div>
-            <p>Our AI is reviewing your resume...</p>
+            <p className="loader-text">Our AI is reviewing your resume...</p>
           </div>
         )}
 
