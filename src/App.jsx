@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { extractTextFromFile } from './services/fileParser';
-import { analyzeResume } from './services/gemini';
-import { generatePDFReport } from './services/pdfGenerator';
+import { analyzeResume, improveResume } from './services/gemini';
+import { generatePDFReport, generateImprovedResumePDF } from './services/pdfGenerator';
 import './App.css';
 
 function App() {
@@ -20,15 +20,21 @@ function App() {
   const [analysisResult, setAnalysisResult] = useState('');
   const [error, setError] = useState('');
 
-  // Load API key from session storage on mount
+  const [isImproving, setIsImproving] = useState(false);
+  const [improvedResume, setImprovedResume] = useState('');
+  const [improverError, setImproverError] = useState('');
+  const [isDownloadingImprovedPDF, setIsDownloadingImprovedPDF] = useState(false);
+  const [improvedSuccessMsg, setImprovedSuccessMsg] = useState('');
+
+  // Load API key from local storage on mount
   useEffect(() => {
-    const storedKey = sessionStorage.getItem('gemini_api_key');
+    const storedKey = localStorage.getItem('gemini_api_key');
     if (storedKey) setApiKey(storedKey);
   }, []);
 
   const saveApiKey = (key) => {
     setApiKey(key);
-    sessionStorage.setItem('gemini_api_key', key);
+    localStorage.setItem('gemini_api_key', key);
     setShowSettings(false);
   };
 
@@ -69,6 +75,9 @@ function App() {
         selectedFile.name.endsWith('.docx')) {
       setFile(selectedFile);
       setAnalysisResult('');
+      setImprovedResume('');
+      setImproverError('');
+      setImprovedSuccessMsg('');
     } else {
       setError('Please upload a valid PDF or DOCX file.');
       setFile(null);
@@ -114,12 +123,50 @@ function App() {
     }
   };
 
+  const handleImproveResume = async () => {
+    if (!apiKey) {
+      setImproverError('API Key is missing.');
+      return;
+    }
+    
+    setIsImproving(true);
+    setImproverError('');
+    setImprovedSuccessMsg('');
+    
+    try {
+      const extractedText = await extractTextFromFile(file);
+      const result = await improveResume(apiKey, extractedText);
+      setImprovedResume(result);
+    } catch (err) {
+      setImproverError(err.message || 'An error occurred during improvement.');
+    } finally {
+      setIsImproving(false);
+    }
+  };
+
+  const handleDownloadImprovedPDF = async () => {
+    setIsDownloadingImprovedPDF(true);
+    setImproverError('');
+    setImprovedSuccessMsg('');
+    try {
+      const candidateName = file?.name?.replace(/\.[^/.]+$/, "") || "Candidate";
+      await generateImprovedResumePDF(candidateName, 'improved-resume-preview');
+      setImprovedSuccessMsg('Improved resume downloaded successfully!');
+      setTimeout(() => setImprovedSuccessMsg(''), 5000);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      setImproverError('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloadingImprovedPDF(false);
+    }
+  };
+
   return (
     <div className="app-container">
       <header className="header">
         <div className="logo">
           <FileText size={28} color="#a78bfa" />
-          Resume Mentor AI
+          <span>Resume <span className="logo-accent">Mentor AI</span></span>
         </div>
         <button 
           className="settings-btn" 
@@ -216,7 +263,12 @@ function App() {
                 <button 
                   className="btn-primary" 
                   style={{ width: 'auto', padding: '0.5rem 1rem' }}
-                  onClick={() => setAnalysisResult('')}
+                  onClick={() => {
+                    setAnalysisResult('');
+                    setImprovedResume('');
+                    setImproverError('');
+                    setImprovedSuccessMsg('');
+                  }}
                 >
                   Analyze Another Resume
                 </button>
@@ -227,12 +279,73 @@ function App() {
               <ReactMarkdown>{analysisResult}</ReactMarkdown>
             </div>
 
+            {/* AI Resume Improver Section */}
+            <div className="resume-improver-section glass" style={{ marginTop: '3rem', padding: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">✨ AI Resume Improver</h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '600px' }}>
+                  Let our AI rewrite and format your resume professionally. We'll optimize your content for ATS readability without inventing any false information.
+                </p>
+                {!improvedResume && !isImproving && (
+                  <button 
+                    className="btn-primary" 
+                    style={{ width: 'auto', minWidth: '250px' }}
+                    onClick={handleImproveResume}
+                  >
+                    ✨ Improve Resume with AI
+                  </button>
+                )}
+              </div>
+
+              {isImproving && (
+                <div className="loader" style={{ padding: '2rem 0' }}>
+                  <div className="spinner"></div>
+                  <p className="loader-text">Professionally rewriting your resume...</p>
+                </div>
+              )}
+
+              {improverError && (
+                <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                  <AlertCircle size={18} />
+                  <span>{improverError}</span>
+                </div>
+              )}
+
+              {improvedResume && !isImproving && (
+                <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
+                  <div 
+                    id="improved-resume-preview"
+                    className="resume-preview" 
+                    dangerouslySetInnerHTML={{ __html: improvedResume }} 
+                  ></div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <button 
+                      className="btn-primary" 
+                      onClick={handleDownloadImprovedPDF}
+                      disabled={isDownloadingImprovedPDF}
+                      style={{ width: '100%', maxWidth: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}
+                    >
+                      <Download size={20} />
+                      {isDownloadingImprovedPDF ? 'Generating PDF...' : 'Download Improved Resume (PDF)'}
+                    </button>
+                    {improvedSuccessMsg && (
+                      <div className="success-message">
+                        <CheckCircle size={18} />
+                        {improvedSuccessMsg}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </section>
         )}
       </main>
 
       <footer className="footer">
-        Resume Mentor AI &copy; 2026 • Powered by Gemini AI
+        Resume Mentor AI &copy; 2026 • Powered by Moumita De Panja
       </footer>
 
       {showSettings && (

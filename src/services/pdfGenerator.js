@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 
 export const generatePDFReport = (candidateName, markdownText) => {
   const doc = new jsPDF({
@@ -144,4 +145,23 @@ export const generatePDFReport = (candidateName, markdownText) => {
   }
 
   doc.save(`${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume_Report.pdf`);
+};
+
+
+
+export const generateImprovedResumePDF = async (candidateName, elementId) => {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error('Resume preview element not found.');
+  }
+
+  const opt = {
+    margin:       15,
+    filename:     `${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_Improved_Resume.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  return html2pdf().set(opt).from(element).save();
 };
