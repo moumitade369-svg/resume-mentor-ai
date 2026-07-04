@@ -49,87 +49,112 @@ export const generatePDFReport = (candidateName, markdownText) => {
   doc.setDrawColor(200, 200, 200);
   doc.line(margin, y - 5, pageWidth - margin, y - 5);
 
-  // Content
-  const lines = markdownText.split('\n');
+  // Content Parse
+  const sections = [];
+  let currentSection = { heading: null, items: [] };
 
+  const lines = markdownText.split('\n');
   lines.forEach(line => {
     let text = line.trim();
-    if (!text) {
-      if (y > margin) {
-        y += 4;
-        checkPageBreak(0);
-      }
-      return;
-    }
+    if (!text) return;
 
-    let isHeading = false;
-    let isBullet = false;
-    let headingTextToPrint = null;
-
-    // Detect markdown headings
     if (text.startsWith('#')) {
-      text = text.replace(/^#+\s/, '');
-      isHeading = true;
+      if (currentSection.heading || currentSection.items.length > 0) sections.push(currentSection);
+      currentSection = { heading: text.replace(/^#+\s/, '').toUpperCase(), items: [] };
     } else if (text.startsWith('- **') || text.startsWith('* **')) {
-      // It's a bolded bullet point section like "- **Professional Summary**: details"
+      if (currentSection.heading || currentSection.items.length > 0) sections.push(currentSection);
       const match = text.match(/^[-*]\s\*\*(.*?)\*\*(.*)/);
       if (match) {
-        headingTextToPrint = match[1] + (match[2].startsWith(':') ? ':' : '');
-        text = match[2].replace(/^:\s*/, '').trim();
+        currentSection = { 
+          heading: match[1].toUpperCase() + (match[2].startsWith(':') ? '' : ''), 
+          items: [] 
+        };
+        let content = match[2].replace(/^:\s*/, '').trim();
+        content = content.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').replace(/_/g, '');
+        if (content) currentSection.items.push({ text: content, isBullet: false });
       }
-    } else if (text.startsWith('- ') || text.startsWith('* ')) {
-      isBullet = true;
-      text = text.substring(2).trim();
+    } else {
+      let isBullet = false;
+      if (text.startsWith('- ') || text.startsWith('* ')) {
+        isBullet = true;
+        text = text.substring(2).trim();
+      } else if (text.startsWith('• ')) {
+        isBullet = true;
+        text = text.substring(2).trim();
+      }
+      text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').replace(/_/g, '');
+      if (text) {
+        currentSection.items.push({ text, isBullet });
+      }
     }
-    
-    // Clean up remaining markdown bold/italic tags
-    text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').replace(/_/g, '');
+  });
+  if (currentSection.heading || currentSection.items.length > 0) {
+    sections.push(currentSection);
+  }
 
-    // Print bold bullet heading if found
-    if (headingTextToPrint) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      checkPageBreak(8);
-      doc.text(headingTextToPrint, margin, y);
-      y += 6;
+  // Print Content
+  sections.forEach((section, index) => {
+    let estimatedHeight = 0;
+    if (section.heading) estimatedHeight += 14;
+    section.items.forEach(item => {
+      const split = doc.splitTextToSize(item.text, maxLineWidth - (item.isBullet ? 6 : 0));
+      estimatedHeight += (split.length * 5.5) + 2;
+    });
+
+    if (estimatedHeight < (pageHeight - margin * 2) && y + estimatedHeight > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
     }
 
-    if (!text && headingTextToPrint) {
-       return; // Only a heading on this line
-    }
-
-    if (isHeading) {
+    if (section.heading) {
+      if (index > 0 && y > margin) {
+        y += 4;
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(200, 220, 255); // Subtle blue separator
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 8;
+      }
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0);
-      y += 4; // Extra space before heading
-      checkPageBreak(8);
-    } else {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.setTextColor(50, 50, 50);
+      doc.setTextColor(20, 20, 20); // Dark Black
+      doc.text(section.heading, margin, y);
+      y += 7;
     }
 
-    const xPos = isBullet ? margin + 5 : margin;
-    const textWidth = maxLineWidth - (isBullet ? 5 : 0);
-    
-    if (isBullet) {
-      checkPageBreak(6);
-      doc.text('•', margin, y);
-    }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
 
-    const splitText = doc.splitTextToSize(text, textWidth);
-    
-    splitText.forEach(tLine => {
-      checkPageBreak(6);
-      doc.text(tLine, xPos, y);
-      y += 6;
+    section.items.forEach(item => {
+      const textWidth = maxLineWidth - (item.isBullet ? 6 : 0);
+      const xPos = item.isBullet ? margin + 6 : margin;
+      const splitText = doc.splitTextToSize(item.text, textWidth);
+      
+      const itemHeight = (splitText.length * 5.5) + 2;
+      if (itemHeight < (pageHeight - margin * 2) && y + itemHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      
+      if (item.isBullet) {
+        doc.setFontSize(14); // slightly bigger bullet
+        doc.text('•', margin + 2, y + 1);
+        doc.setFontSize(11);
+      }
+      
+      splitText.forEach(tLine => {
+        if (checkPageBreak(6)) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(11);
+          doc.setTextColor(40, 40, 40);
+        }
+        doc.text(tLine, xPos, y);
+        y += 5.5;
+      });
+      y += 2; // tight spacing between items
     });
     
-    if (isHeading) {
-      y += 2; // Extra space after heading
-    }
+    y += 4; // reduced space after section
   });
 
   // Add Footer to all pages
@@ -156,11 +181,12 @@ export const generateImprovedResumePDF = async (candidateName, elementId) => {
   }
 
   const opt = {
-    margin:       15,
+    margin:       [15, 15, 15, 15],
     filename:     `${candidateName.replace(/[^a-zA-Z0-9]/g, '_')}_Improved_Resume.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    image:        { type: 'jpeg', quality: 1 },
+    html2canvas:  { scale: 3, useCORS: true, letterRendering: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'], avoid: ['.cv-section', '.cv-experience-item', '.cv-experience-header', '.cv-header', 'li', 'h1', 'h2', 'h3', 'p', 'table', '.cv-company'] }
   };
 
   return html2pdf().set(opt).from(element).save();

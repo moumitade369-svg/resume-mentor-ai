@@ -73,18 +73,35 @@
 
 .hero {
   text-align: center;
-  padding: 2rem 0;
+  padding: 4rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-badge {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #c4b5fd;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  display: inline-block;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }
 
 .hero h1 {
-  font-size: 5rem;
+  font-size: 4.5rem;
   margin-bottom: 1.5rem;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.04em;
-  background: linear-gradient(to right, #ffffff, #a5b4fc, #f472b6);
+  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #f472b6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
 }
 
 .hero p {
@@ -92,8 +109,68 @@
   color: var(--text-muted);
   max-width: 650px;
   margin: 0 auto;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.6;
+}
+
+.landing-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.info-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+  margin: 0 auto;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.info-card {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.info-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 15px 40px -10px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.info-icon {
+  font-size: 2.5rem;
+  background: rgba(139, 92, 246, 0.1);
+  width: 4.5rem;
+  height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+  transition: transform 0.4s ease;
+}
+
+.info-card:hover .info-icon {
+  transform: scale(1.1);
+}
+
+.info-card h3 {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.info-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .footer {
@@ -340,10 +417,22 @@
 }
 
 /* Results Section */
+.results-layout {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.results-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .results-section {
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
   padding: 3rem;
   position: relative;
   overflow: hidden;
@@ -491,12 +580,8 @@
 /* AI Resume Improver Section */
 .resume-improver-section {
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 3rem;
   position: relative;
   overflow: hidden;
-  margin-top: 2rem;
 }
 
 .resume-preview {
@@ -564,6 +649,35 @@
 .resume-preview .markdown-body ul {
   color: #444444;
   list-style-type: disc;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+.resume-preview .markdown-body li {
+  margin-bottom: 0.5rem;
+}
+
+/* Sidebar Layout */
+.action-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 100px; /* offset for sticky header */
+}
+
+.action-panel {
+  padding: 2rem;
+}
+
+@media (max-width: 992px) {
+  .results-layout {
+    flex-direction: column;
+  }
+  .action-sidebar {
+    width: 100%;
+    position: static;
+  }
 }
 
 .btn-secondary {
@@ -599,3 +713,202 @@
   font-weight: 500;
 }
 
+/* Premium Features Section */
+.features-section, .how-it-works-section {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.section-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: left;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(139, 92, 246, 0.2);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  transition: transform 0.4s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+.feature-card h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+
+/* How It Works Section */
+.steps-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.step {
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.step-arrow {
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .steps-container {
+    flex-direction: column;
+  }
+}
+
+
+/* --- Professional CV Template Styles --- */
+
+.cv-template {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #000;
+  line-height: 1.5;
+  background: #fff;
+  padding: 10px;
+  width: 100%;
+}
+
+.cv-template p,
+.cv-template li,
+.cv-template span {
+  font-size: 11pt;
+  color: #333;
+}
+
+.cv-header {
+  text-align: center;
+  border-bottom: 2px solid #2c3e50;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  page-break-after: avoid;
+}
+
+.cv-name {
+  font-size: 24pt !important;
+  font-weight: 700 !important;
+  color: #2c3e50 !important;
+  margin: 0 0 8px 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none !important;
+}
+
+.cv-contact {
+  font-size: 10.5pt;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.cv-section {
+  margin-bottom: 20px;
+  page-break-inside: avoid;
+}
+
+.cv-section-title {
+  font-size: 14pt !important;
+  font-weight: 700 !important;
+  color: #2c3e50 !important;
+  text-transform: uppercase;
+  border-bottom: 1px solid #ccc !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 12px !important;
+  page-break-after: avoid;
+}
+
+.cv-paragraph {
+  margin-bottom: 10px;
+  text-align: justify;
+}
+
+.cv-experience-item {
+  margin-bottom: 16px;
+  page-break-inside: avoid;
+}
+
+.cv-experience-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+  page-break-after: avoid;
+}
+
+.cv-role {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #222;
+}
+
+.cv-date {
+  font-size: 11pt;
+  color: #555;
+  font-style: italic;
+}
+
+.cv-company {
+  font-size: 11.5pt;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 8px;
+  page-break-after: avoid;
+}
+
+.cv-list {
+  padding-left: 20px !important;
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+  list-style-type: disc !important;
+}
+
+.cv-list li {
+  margin-bottom: 6px !important;
+  text-align: justify;
+  page-break-inside: avoid;
+}
+
+.cv-skills {
+  font-size: 11pt;
+  line-height: 1.6;
+}
