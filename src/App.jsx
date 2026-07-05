@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download, Briefcase, BarChart, Sparkles, RefreshCw } from 'lucide-react';
+import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download, Briefcase, BarChart, Sparkles, RefreshCw, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { extractTextFromFile } from './services/fileParser';
-import { analyzeResume, improveResume } from './services/gemini';
+import { analyzeResume, improveResume, analyzeMatchReport, generateJobSpecificResume, generateCoverLetter } from './services/gemini';
 import { generatePDFReport, generateImprovedResumePDF } from './services/pdfGenerator';
 import './App.css';
 
@@ -29,6 +29,24 @@ function App() {
   const [improverError, setImproverError] = useState('');
   const [isDownloadingImprovedPDF, setIsDownloadingImprovedPDF] = useState(false);
   const [improvedSuccessMsg, setImprovedSuccessMsg] = useState('');
+  
+  const [extractedText, setExtractedText] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  
+  const [isGeneratingMatch, setIsGeneratingMatch] = useState(false);
+  const [matchReport, setMatchReport] = useState('');
+  const [matchError, setMatchError] = useState('');
+
+  const [isGeneratingJobSpecific, setIsGeneratingJobSpecific] = useState(false);
+  const [jobSpecificResume, setJobSpecificResume] = useState('');
+  const [jobSpecificError, setJobSpecificError] = useState('');
+  const [isDownloadingJobSpecificPDF, setIsDownloadingJobSpecificPDF] = useState(false);
+  const [jobSpecificSuccessMsg, setJobSpecificSuccessMsg] = useState('');
+
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [coverLetterError, setCoverLetterError] = useState('');
+  const [coverLetterCopySuccessMsg, setCoverLetterCopySuccessMsg] = useState('');
 
   const [currentView, setCurrentView] = useState('home');
   const [tempApiKey, setTempApiKey] = useState('');
@@ -104,6 +122,15 @@ function App() {
       setImprovedResume('');
       setImproverError('');
       setImprovedSuccessMsg('');
+      setExtractedText('');
+      setMatchReport('');
+      setMatchError('');
+      setJobSpecificResume('');
+      setJobSpecificError('');
+      setJobSpecificSuccessMsg('');
+      setCoverLetter('');
+      setCoverLetterError('');
+      setCoverLetterCopySuccessMsg('');
     } else {
       setError('Please upload a valid PDF or DOCX file.');
       setFile(null);
@@ -127,8 +154,12 @@ function App() {
     setAnalysisResult('');
 
     try {
-      const extractedText = await extractTextFromFile(file);
-      const result = await analyzeResume(apiKey, extractedText, jobTarget);
+      let text = extractedText;
+      if (!text) {
+        text = await extractTextFromFile(file);
+        setExtractedText(text);
+      }
+      const result = await analyzeResume(apiKey, text, jobTarget);
       setAnalysisResult(result);
     } catch (err) {
       setError(err.message || 'An error occurred during analysis.');
@@ -160,8 +191,12 @@ function App() {
     setImprovedSuccessMsg('');
     
     try {
-      const extractedText = await extractTextFromFile(file);
-      const result = await improveResume(apiKey, extractedText, jobTarget);
+      let text = extractedText;
+      if (!text) {
+        text = await extractTextFromFile(file);
+        setExtractedText(text);
+      }
+      const result = await improveResume(apiKey, text, jobTarget);
       setImprovedResume(result);
     } catch (err) {
       setImproverError(err.message || 'An error occurred during improvement.');
@@ -184,6 +219,125 @@ function App() {
       setImproverError('Failed to generate PDF. Please try again.');
     } finally {
       setIsDownloadingImprovedPDF(false);
+    }
+  };
+
+  const handleAnalyzeMatch = async () => {
+    if (!apiKey) {
+      setMatchError('API Key is missing.');
+      return;
+    }
+    if (!improvedResume) {
+      setMatchError('Please improve your resume first before analyzing match.');
+      return;
+    }
+    if (!jobDescription.trim()) {
+      setMatchError('Please enter a Job Description.');
+      return;
+    }
+    
+    setIsGeneratingMatch(true);
+    setMatchError('');
+    
+    try {
+      let text = extractedText;
+      if (!text) {
+        text = await extractTextFromFile(file);
+        setExtractedText(text);
+      }
+      const result = await analyzeMatchReport(apiKey, text, improvedResume, jobDescription);
+      setMatchReport(result);
+    } catch (err) {
+      setMatchError(err.message || 'An error occurred during match analysis.');
+    } finally {
+      setIsGeneratingMatch(false);
+    }
+  };
+
+  const handleGenerateJobSpecificResume = async () => {
+    if (!apiKey) {
+      setJobSpecificError('API Key is missing.');
+      return;
+    }
+    if (!improvedResume || !jobDescription.trim()) {
+      setJobSpecificError('Requires improved resume and job description.');
+      return;
+    }
+    
+    setIsGeneratingJobSpecific(true);
+    setJobSpecificError('');
+    
+    try {
+      let text = extractedText;
+      if (!text) {
+        text = await extractTextFromFile(file);
+        setExtractedText(text);
+      }
+      const result = await generateJobSpecificResume(apiKey, text, improvedResume, jobDescription);
+      setJobSpecificResume(result);
+    } catch (err) {
+      setJobSpecificError(err.message || 'An error occurred during job-specific resume generation.');
+    } finally {
+      setIsGeneratingJobSpecific(false);
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!apiKey) {
+      setCoverLetterError('API Key is missing.');
+      return;
+    }
+    if (!improvedResume || !jobDescription.trim()) {
+      setCoverLetterError('Requires improved resume and job description.');
+      return;
+    }
+    
+    setIsGeneratingCoverLetter(true);
+    setCoverLetterError('');
+    
+    try {
+      let text = extractedText;
+      if (!text) {
+        text = await extractTextFromFile(file);
+        setExtractedText(text);
+      }
+      const result = await generateCoverLetter(apiKey, text, improvedResume, jobDescription);
+      setCoverLetter(result);
+    } catch (err) {
+      setCoverLetterError(err.message || 'An error occurred during cover letter generation.');
+    } finally {
+      setIsGeneratingCoverLetter(false);
+    }
+  };
+
+  const handleDownloadJobSpecificPDF = async () => {
+    setIsDownloadingJobSpecificPDF(true);
+    setJobSpecificError('');
+    setJobSpecificSuccessMsg('');
+    try {
+      const candidateName = file?.name?.replace(/\.[^/.]+$/, "") || "Candidate";
+      await generateImprovedResumePDF(candidateName + "_Job_Specific", 'job-specific-resume-preview');
+      setJobSpecificSuccessMsg('Job-specific resume downloaded successfully!');
+      setTimeout(() => setJobSpecificSuccessMsg(''), 5000);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      setJobSpecificError('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloadingJobSpecificPDF(false);
+    }
+  };
+
+  const handleCopyCoverLetter = () => {
+    if (coverLetter) {
+      navigator.clipboard.writeText(coverLetter)
+        .then(() => {
+          setCoverLetterCopySuccessMsg('Copied to clipboard!');
+          setTimeout(() => setCoverLetterCopySuccessMsg(''), 3000);
+        })
+        .catch(err => {
+          console.error('Failed to copy text: ', err);
+          setCoverLetterError('Failed to copy to clipboard.');
+        });
     }
   };
 
@@ -505,6 +659,172 @@ function App() {
                   </div>
                 )}
               </section>
+
+              {improvedResume && !isImproving && (
+                <section className="resume-improver-section glass" style={{ marginTop: '2rem', padding: '3rem' }}>
+                  <div style={{ width: '100%', textAlign: 'left', marginBottom: '2.5rem' }}>
+                    <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">🎯 Target Job Analysis (Optional)</h2>
+                    <label htmlFor="jobDescription" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1.1rem' }}>Paste the Full Job Description</label>
+                    <textarea 
+                      id="jobDescription" 
+                      placeholder="Paste the full job description here to generate match report, job-specific resume, and cover letter..."
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      style={{ 
+                        width: '100%', 
+                        padding: '1rem', 
+                        borderRadius: '12px', 
+                        border: '1px solid var(--border-color)', 
+                        background: 'rgba(0,0,0,0.3)', 
+                        color: 'var(--text-main)',
+                        minHeight: '150px',
+                        resize: 'vertical',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {!matchReport && !isGeneratingMatch && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <button 
+                        className="btn-primary" 
+                        style={{ width: 'auto', minWidth: '250px' }}
+                        onClick={handleAnalyzeMatch}
+                        disabled={!jobDescription.trim()}
+                      >
+                        📊 Analyze Match
+                      </button>
+                    </div>
+                  )}
+
+                  {isGeneratingMatch && (
+                    <div className="loader" style={{ padding: '2rem 0' }}>
+                      <div className="spinner"></div>
+                      <p className="loader-text">Analyzing match and generating report...</p>
+                    </div>
+                  )}
+
+                  {matchError && (
+                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      <AlertCircle size={18} />
+                      <span>{matchError}</span>
+                    </div>
+                  )}
+
+                  {matchReport && !isGeneratingMatch && (
+                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '2rem' }}>
+                      <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Resume Match Report</h2>
+                      <div className="markdown-body">
+                        <ReactMarkdown>{matchReport}</ReactMarkdown>
+                      </div>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
+                        {!jobSpecificResume && !isGeneratingJobSpecific && (
+                          <button 
+                            className="btn-primary" 
+                            onClick={handleGenerateJobSpecificResume}
+                          >
+                            📝 Generate Job-Specific Resume
+                          </button>
+                        )}
+                        {!coverLetter && !isGeneratingCoverLetter && (
+                          <button 
+                            className="btn-primary" 
+                            onClick={handleGenerateCoverLetter}
+                          >
+                            ✉️ Generate AI Cover Letter
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isGeneratingJobSpecific && (
+                    <div className="loader" style={{ padding: '2rem 0' }}>
+                      <div className="spinner"></div>
+                      <p className="loader-text">Generating tailored job-specific resume...</p>
+                    </div>
+                  )}
+
+                  {jobSpecificError && (
+                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      <AlertCircle size={18} />
+                      <span>{jobSpecificError}</span>
+                    </div>
+                  )}
+
+                  {jobSpecificResume && !isGeneratingJobSpecific && (
+                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem' }}>
+                      <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Job-Specific Resume</h2>
+                      <div 
+                        id="job-specific-resume-preview"
+                        className="resume-preview" 
+                        dangerouslySetInnerHTML={{ __html: jobSpecificResume }} 
+                      ></div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                        <button 
+                          className="btn-primary" 
+                          onClick={handleDownloadJobSpecificPDF}
+                          disabled={isDownloadingJobSpecificPDF}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: 'auto', minWidth: '250px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)', border: 'none' }}
+                        >
+                          <Download size={18} />
+                          {isDownloadingJobSpecificPDF ? 'Generating...' : 'Download Job-Specific PDF'}
+                        </button>
+                        {jobSpecificSuccessMsg && (
+                          <div className="success-message">
+                            <CheckCircle size={18} />
+                            {jobSpecificSuccessMsg}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isGeneratingCoverLetter && (
+                    <div className="loader" style={{ padding: '2rem 0' }}>
+                      <div className="spinner"></div>
+                      <p className="loader-text">Generating professional cover letter...</p>
+                    </div>
+                  )}
+
+                  {coverLetterError && (
+                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      <AlertCircle size={18} />
+                      <span>{coverLetterError}</span>
+                    </div>
+                  )}
+
+                  {coverLetter && !isGeneratingCoverLetter && (
+                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', margin: 0 }}>AI Cover Letter</h2>
+                        <button 
+                          onClick={handleCopyCoverLetter}
+                          className="btn-secondary"
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                          title="Copy Cover Letter"
+                        >
+                          <Copy size={16} />
+                          Copy
+                        </button>
+                      </div>
+                      
+                      {coverLetterCopySuccessMsg && (
+                        <div style={{ color: 'var(--success)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <CheckCircle size={16} />
+                          {coverLetterCopySuccessMsg}
+                        </div>
+                      )}
+
+                      <div className="markdown-body">
+                        <ReactMarkdown>{coverLetter}</ReactMarkdown>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
             </div>
 
             {/* Sticky Sidebar */}
@@ -587,7 +907,17 @@ function App() {
                       setImprovedResume('');
                       setImproverError('');
                       setImprovedSuccessMsg('');
+                      setExtractedText('');
+                      setMatchReport('');
+                      setMatchError('');
+                      setJobSpecificResume('');
+                      setJobSpecificError('');
+                      setJobSpecificSuccessMsg('');
+                      setCoverLetter('');
+                      setCoverLetterError('');
+                      setCoverLetterCopySuccessMsg('');
                       setJobTarget('');
+                      setJobDescription('');
                       setFile(null);
                       setCurrentView('upload');
                     }}
