@@ -1,15 +1,79 @@
-import { GoogleGenAI } from '@google/genai';
+/**
+ * gemini.js — Gemini API service
+ *
+ * Supports two routing modes:
+ *
+ * 1. DIRECT (existing flow — unchanged):
+ *    Called with an `apiKey`. The function fetches the Gemini API directly
+ *    from the browser using the user's own key, exactly as before.
+ *
+ * 2. PROXY (new flow for Google/OTP users):
+ *    Called without an `apiKey` but with a `callProxy` function.
+ *    The function calls the secure Firebase Cloud Function backend,
+ *    which holds the app's Gemini API key server-side.
+ *    The user's Gemini key is never involved here.
+ *
+ * All existing prompts and business logic are completely unchanged.
+ */
 
-// A fallback direct fetch implementation in case the SDK has browser issues
-export const analyzeResume = async (apiKey, resumeText, jobTarget) => {
-  if (!apiKey) {
-    throw new Error("Gemini API Key is required.");
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+/**
+ * Internal helper: runs a prompt through either the direct API or the proxy.
+ * @param {string|null} apiKey - User's own Gemini API key (or null for proxy mode).
+ * @param {Function|null} callProxy - Firebase callable function (or null for direct mode).
+ * @param {string} prompt - The prompt text.
+ * @returns {Promise<string>} - The raw text response from Gemini.
+ */
+async function runGeminiPrompt(apiKey, callProxy, prompt) {
+  // --- MODE 1: Direct fetch using user's own API key (existing behavior) ---
+  if (apiKey) {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error?.message || 'Failed to call Gemini API.'
+      );
+    }
+
+    const data = await response.json();
+    if (data.candidates && data.candidates.length > 0) {
+      return data.candidates[0].content.parts[0].text;
+    }
+    throw new Error('No response returned from Gemini.');
   }
+
+  // --- MODE 2: Proxy via secure Firebase Cloud Function ---
+  if (callProxy) {
+    const result = await callProxy({ prompt });
+    return result.data.text;
+  }
+
+  throw new Error(
+    'No Gemini API key or authenticated session found. Please log in or enter your API key.'
+  );
+}
+
+// ---------------------------------------------------------------------------
+// All functions below are identical to the original except they now accept
+// an optional `callProxy` parameter (last arg). If omitted, it defaults to
+// null and the existing apiKey-based flow is used exactly as before.
+// ---------------------------------------------------------------------------
+
+export const analyzeResume = async (apiKey, resumeText, jobTarget, callProxy = null) => {
   if (!resumeText) {
-    throw new Error("Resume text is empty.");
+    throw new Error('Resume text is empty.');
   }
 
-  let jobTargetContext = "";
+  let jobTargetContext = '';
   if (jobTarget && jobTarget.trim()) {
     jobTargetContext = `\nThe user has provided the following Target Job Role or Job Description:\n"${jobTarget.trim()}"\n\nPlease compare the uploaded resume with this target job. Identify missing skills, missing keywords, ATS keyword gap, and missing responsibilities.`;
   }
@@ -40,44 +104,19 @@ ${resumeText}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to analyze resume with Gemini API.");
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error("No analysis returned from Gemini.");
-    }
+    return await runGeminiPrompt(apiKey, callProxy, prompt);
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error('Gemini API Error:', error);
     throw error;
   }
 };
 
-export const improveResume = async (apiKey, resumeText, jobTarget) => {
-  if (!apiKey) {
-    throw new Error("Gemini API Key is required.");
-  }
+export const improveResume = async (apiKey, resumeText, jobTarget, callProxy = null) => {
   if (!resumeText) {
-    throw new Error("Resume text is empty.");
+    throw new Error('Resume text is empty.');
   }
 
-  let jobTargetContext = "";
+  let jobTargetContext = '';
   if (jobTarget && jobTarget.trim()) {
     jobTargetContext = `\nThe user has provided the following Target Job Role or Job Description:\n"${jobTarget.trim()}"\n\nPlease rewrite the resume specifically for this target job. Optimize it for ATS keywords related to this job.`;
   }
@@ -132,42 +171,25 @@ ${resumeText}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to improve resume with Gemini API.");
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-      let htmlContent = data.candidates[0].content.parts[0].text;
-      htmlContent = htmlContent.replace(/```html/gi, '').replace(/```/g, '').trim();
-      // Remove any stray dots or characters at the start/end
-      htmlContent = htmlContent.replace(/^\.+|\.+$/g, '').trim();
-      return htmlContent;
-    } else {
-      throw new Error("No improved resume returned from Gemini.");
-    }
+    let result = await runGeminiPrompt(apiKey, callProxy, prompt);
+    result = result.replace(/```html/gi, '').replace(/```/g, '').trim();
+    result = result.replace(/^\.+|\.+$/g, '').trim();
+    return result;
   } catch (error) {
-    console.error("Gemini API Error during resume improvement:", error);
+    console.error('Gemini API Error during resume improvement:', error);
     throw error;
   }
 };
 
-export const analyzeMatchReport = async (apiKey, originalResumeText, improvedResumeHtml, jobDescription) => {
-  if (!apiKey) throw new Error("Gemini API Key is required.");
-  if (!originalResumeText || !jobDescription) throw new Error("Resume text and Job Description are required.");
+export const analyzeMatchReport = async (
+  apiKey,
+  originalResumeText,
+  improvedResumeHtml,
+  jobDescription,
+  callProxy = null
+) => {
+  if (!originalResumeText || !jobDescription)
+    throw new Error('Resume text and Job Description are required.');
 
   const prompt = `
 You are an expert HR recruiter and ATS (Applicant Tracking System) specialist.
@@ -202,32 +224,22 @@ ${jobDescription}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to generate match report.");
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error("No report returned from Gemini.");
-    }
+    return await runGeminiPrompt(apiKey, callProxy, prompt);
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error('Gemini API Error:', error);
     throw error;
   }
 };
 
-export const generateJobSpecificResume = async (apiKey, originalResumeText, improvedResumeHtml, jobDescription) => {
-  if (!apiKey) throw new Error("Gemini API Key is required.");
-  if (!originalResumeText || !jobDescription) throw new Error("Resume text and Job Description are required.");
+export const generateJobSpecificResume = async (
+  apiKey,
+  originalResumeText,
+  improvedResumeHtml,
+  jobDescription,
+  callProxy = null
+) => {
+  if (!originalResumeText || !jobDescription)
+    throw new Error('Resume text and Job Description are required.');
 
   const prompt = `
 You are an expert HR recruiter and professional resume writer.
@@ -284,35 +296,25 @@ ${jobDescription}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to generate job-specific resume.");
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-      let htmlContent = data.candidates[0].content.parts[0].text;
-      htmlContent = htmlContent.replace(/```html/gi, '').replace(/```/g, '').trim();
-      htmlContent = htmlContent.replace(/^\.+|\.+$/g, '').trim();
-      return htmlContent;
-    } else {
-      throw new Error("No resume returned from Gemini.");
-    }
+    let result = await runGeminiPrompt(apiKey, callProxy, prompt);
+    result = result.replace(/```html/gi, '').replace(/```/g, '').trim();
+    result = result.replace(/^\.+|\.+$/g, '').trim();
+    return result;
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error('Gemini API Error:', error);
     throw error;
   }
 };
 
-export const generateCoverLetter = async (apiKey, originalResumeText, improvedResumeHtml, jobDescription) => {
-  if (!apiKey) throw new Error("Gemini API Key is required.");
-  if (!originalResumeText || !jobDescription) throw new Error("Resume text and Job Description are required.");
+export const generateCoverLetter = async (
+  apiKey,
+  originalResumeText,
+  improvedResumeHtml,
+  jobDescription,
+  callProxy = null
+) => {
+  if (!originalResumeText || !jobDescription)
+    throw new Error('Resume text and Job Description are required.');
 
   const prompt = `
 You are an expert HR recruiter and professional career coach.
@@ -345,25 +347,9 @@ ${jobDescription}
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to generate cover letter.");
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error("No cover letter returned from Gemini.");
-    }
+    return await runGeminiPrompt(apiKey, callProxy, prompt);
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error('Gemini API Error:', error);
     throw error;
   }
 };

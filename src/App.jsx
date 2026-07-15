@@ -1,12 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from './services/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download, Briefcase, BarChart, Sparkles, RefreshCw, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { extractTextFromFile } from './services/fileParser';
 import { analyzeResume, improveResume, analyzeMatchReport, generateJobSpecificResume, generateCoverLetter } from './services/gemini';
 import { generatePDFReport, generateImprovedResumePDF } from './services/pdfGenerator';
 import './App.css';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import Features from './components/Features';
+import HowItWorks from './components/HowItWorks';
+import Comparison from './components/Comparison';
+import WhyChooseUs from './components/WhyChooseUs';
+import Statistics from './components/Statistics';
+import Testimonials from './components/Testimonials';
+import FAQ from './components/FAQ';
+import Footer from './components/Footer';
+import './UIPreview.css'; // Premium CSS
+import Sidebar from './components/Sidebar';
+import TopHeader from './components/TopHeader';
+import UploadCard from './components/UploadCard';
+import ATSScoreCard from './components/ATSScoreCard';
+import { motion } from 'framer-motion';
 
 function App() {
+  const isPreview = window.location.pathname === '/ui-preview' || window.location.pathname === '/homepage-preview';
+
   const [apiKey, setApiKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   
@@ -49,10 +69,30 @@ function App() {
   const [coverLetterCopySuccessMsg, setCoverLetterCopySuccessMsg] = useState('');
 
   const [currentView, setCurrentView] = useState('home');
+  const [activeSidebarItem, setActiveSidebarItem] = useState('upload');
   const [tempApiKey, setTempApiKey] = useState('');
   const [showApiPassword, setShowApiPassword] = useState(false);
   const [apiKeyError, setApiKeyError] = useState('');
   const [apiKeySuccess, setApiKeySuccess] = useState(false);
+
+  // Firebase Authentication state
+  const [firebaseUser, setFirebaseUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user || null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      setFirebaseUser(null);
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+  };
 
   const handleValidateApiKey = () => {
     if (!tempApiKey.trim()) {
@@ -161,6 +201,7 @@ function App() {
       }
       const result = await analyzeResume(apiKey, text, jobTarget);
       setAnalysisResult(result);
+      setActiveSidebarItem('analysis');
     } catch (err) {
       setError(err.message || 'An error occurred during analysis.');
     } finally {
@@ -198,6 +239,7 @@ function App() {
       }
       const result = await improveResume(apiKey, text, jobTarget);
       setImprovedResume(result);
+      setActiveSidebarItem('improver');
     } catch (err) {
       setImproverError(err.message || 'An error occurred during improvement.');
     } finally {
@@ -343,97 +385,138 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="header">
-        <div className="logo" onClick={() => { setCurrentView('home'); setAnalysisResult(''); }} style={{cursor: 'pointer'}}>
-          <FileText size={28} color="#a78bfa" />
-          <span>Resume <span className="logo-accent">Mentor AI</span></span>
-        </div>
-        <button 
-          className="settings-btn" 
-          onClick={() => setShowSettings(true)}
-          title="Settings (API Key)"
-        >
-          <Settings size={20} />
-        </button>
-      </header>
+      {isPreview ? (
+        <Navbar 
+          firebaseUser={firebaseUser}
+          handleSignOut={handleSignOut}
+          setShowSettings={setShowSettings}
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          setAnalysisResult={setAnalysisResult}
+        />
+      ) : (
+        <header className="header">
+          <div className="logo" onClick={() => { setCurrentView('home'); setAnalysisResult(''); }} style={{cursor: 'pointer'}}>
+            <FileText size={28} color="#a78bfa" />
+            <span>Resume <span className="logo-accent">Mentor AI</span></span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {firebaseUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {firebaseUser.displayName || firebaseUser.phoneNumber || firebaseUser.email}
+                </span>
+                <button
+                  className="settings-btn"
+                  onClick={handleSignOut}
+                  title="Sign Out"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            )}
+            <button 
+              className="settings-btn" 
+              onClick={() => setShowSettings(true)}
+              title="Settings (API Key)"
+            >
+              <Settings size={20} />
+            </button>
+          </div>
+        </header>
+      )}
 
       <main className="main-content">
         {!analysisResult && !isAnalyzing && currentView === 'home' && (
-          <div className="landing-wrapper">
-            <section className="hero">
-              <div className="hero-badge">✨ Next Generation Resume AI</div>
-              <h1>Build Your Perfect Resume with AI</h1>
-              <p>
-                Create ATS-friendly resumes with AI-powered suggestions and improve your resume professionally.
-              </p>
-            </section>
+          isPreview ? (
+            <div className="ui-preview-root" style={{ minHeight: 'unset', padding: 0 }}>
+              <Hero setCurrentView={setCurrentView} />
+              <Features />
+              <HowItWorks />
+              <Comparison />
+              <WhyChooseUs />
+              <Statistics />
+              <Testimonials />
+              <FAQ />
+            </div>
+          ) : (
+            <div className="landing-wrapper">
+              <section className="hero">
+                <div className="hero-badge">✨ Next Generation Resume AI</div>
+                <h1>Build Your Perfect Resume with AI</h1>
+                <p>
+                  Create ATS-friendly resumes with AI-powered suggestions and improve your resume professionally.
+                </p>
+              </section>
 
-            <section className="info-cards-container">
-              <div className="info-card glass">
-                <div className="info-icon">📄</div>
-                <h3>Before Improvement Report</h3>
-                <p>Preview your original resume report before AI optimization.</p>
-              </div>
-              <div className="info-card glass">
-                <div className="info-icon">✨</div>
-                <h3>After Improvement Report</h3>
-                <p>Download your AI improved resume after analysis.</p>
-              </div>
-            </section>
+              <section className="info-cards-container">
+                <div className="info-card glass">
+                  <div className="info-icon">📄</div>
+                  <h3>Before Improvement Report</h3>
+                  <p>Preview your original resume report before AI optimization.</p>
+                </div>
+                <div className="info-card glass">
+                  <div className="info-icon">✨</div>
+                  <h3>After Improvement Report</h3>
+                  <p>Download your AI improved resume after analysis.</p>
+                </div>
+              </section>
 
-            <section className="cta-section" style={{ textAlign: 'center', margin: '2rem 0' }}>
-              <button 
-                className="btn-primary" 
-                onClick={() => setCurrentView('api-key')}
-                style={{ fontSize: '1.5rem', padding: '1.2rem 3rem', borderRadius: '50px', width: 'auto' }}
-              >
-                Get Started
-              </button>
-            </section>
+              <section className="cta-section" style={{ textAlign: 'center', margin: '2rem 0' }}>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => setCurrentView('api-key')}
+                  style={{ fontSize: '1.5rem', padding: '1.2rem 3rem', borderRadius: '50px', width: 'auto' }}
+                >
+                  Get Started
+                </button>
+              </section>
 
-            <section className="features-section">
-              <h2 className="section-title">Premium Features</h2>
-              <div className="features-grid">
-                <div className="feature-card glass">
-                  <div className="feature-icon">🔍</div>
-                  <h4>AI Resume Analysis</h4>
+              <section className="features-section">
+                <h2 className="section-title">Premium Features</h2>
+                <div className="features-grid">
+                  <div className="feature-card glass">
+                    <div className="feature-icon">🔍</div>
+                    <h4>AI Resume Analysis</h4>
+                  </div>
+                  <div className="feature-card glass">
+                    <div className="feature-icon">⚡</div>
+                    <h4>ATS Optimization</h4>
+                  </div>
+                  <div className="feature-card glass">
+                    <div className="feature-icon">📈</div>
+                    <h4>Resume Improvement</h4>
+                  </div>
+                  <div className="feature-card glass">
+                    <div className="feature-icon">💡</div>
+                    <h4>AI Suggestions</h4>
+                  </div>
+                  <div className="feature-card glass">
+                    <div className="feature-icon">🎯</div>
+                    <h4>Keyword Scanner</h4>
+                  </div>
+                  <div className="feature-card glass">
+                    <div className="feature-icon">📄</div>
+                    <h4>Download PDF</h4>
+                  </div>
                 </div>
-                <div className="feature-card glass">
-                  <div className="feature-icon">⚡</div>
-                  <h4>ATS Optimization</h4>
-                </div>
-                <div className="feature-card glass">
-                  <div className="feature-icon">📈</div>
-                  <h4>Resume Improvement</h4>
-                </div>
-                <div className="feature-card glass">
-                  <div className="feature-icon">💡</div>
-                  <h4>AI Suggestions</h4>
-                </div>
-                <div className="feature-card glass">
-                  <div className="feature-icon">🎯</div>
-                  <h4>Keyword Scanner</h4>
-                </div>
-                <div className="feature-card glass">
-                  <div className="feature-icon">📄</div>
-                  <h4>Download PDF</h4>
-                </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="how-it-works-section">
-              <h2 className="section-title">How It Works</h2>
-              <div className="steps-container">
-                <div className="step glass">Upload Resume</div>
-                <div className="step-arrow">↓</div>
-                <div className="step glass">Analyze Resume</div>
-                <div className="step-arrow">↓</div>
-                <div className="step glass">Improve Resume</div>
-                <div className="step-arrow">↓</div>
-                <div className="step glass">Download Report</div>
-              </div>
-            </section>
-          </div>
+              <section className="how-it-works-section">
+                <h2 className="section-title">How It Works</h2>
+                <div className="steps-container">
+                  <div className="step glass">Upload Resume</div>
+                  <div className="step-arrow">↓</div>
+                  <div className="step glass">Analyze Resume</div>
+                  <div className="step-arrow">↓</div>
+                  <div className="step glass">Improve Resume</div>
+                  <div className="step-arrow">↓</div>
+                  <div className="step glass">Download Report</div>
+                </div>
+              </section>
+            </div>
+          )
         )}
 
         {!analysisResult && !isAnalyzing && currentView === 'api-key' && (
@@ -486,353 +569,414 @@ function App() {
           </div>
         )}
 
-        {!analysisResult && !isAnalyzing && currentView === 'upload' && (
-          <div className="upload-page" style={{ animation: 'fadeIn 0.5s ease-out', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1rem', fontWeight: 800 }}>Upload Your Resume</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Let our AI analyze and improve your resume instantly.</p>
-            </div>
-            <section className="upload-section">
-              <div 
-                className={`upload-area glass ${isDragging ? 'drag-active' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById('file-upload').click()}
-              >
-                <input 
-                  id="file-upload" 
-                  type="file" 
-                  accept=".pdf,.docx" 
-                  style={{ display: 'none' }} 
-                  onChange={handleFileChange}
-                />
-                <UploadCloud size={48} className="upload-icon" />
-                <div className="upload-text">Click to upload or drag and drop</div>
-                <div className="upload-hint">PDF or DOCX (Max 10MB)</div>
-              </div>
-
-              {error && (
-                <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                  <AlertCircle size={18} />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {file && (
-                <div className="file-info glass">
-                  <div className="file-name">
-                    <CheckCircle size={18} color="var(--success)" />
-                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                  </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              )}
-
-              {file && (
-                <div style={{ marginTop: '1.5rem', width: '100%', textAlign: 'left' }}>
-                  <label htmlFor="jobTarget" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>Target Job Role OR Paste Job Description</label>
-                  <textarea 
-                    id="jobTarget" 
-                    placeholder="e.g. Software Engineer, OR paste the full job description here..."
-                    value={jobTarget}
-                    onChange={(e) => setJobTarget(e.target.value)}
-                    style={{ 
-                      width: '100%', 
-                      padding: '1rem', 
-                      borderRadius: '12px', 
-                      border: '1px solid var(--border-color)', 
-                      background: 'rgba(0,0,0,0.3)', 
-                      color: 'var(--text-main)',
-                      minHeight: '100px',
-                      resize: 'vertical',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-              )}
-
-              <button 
-                className="btn-primary btn-analyze" 
-                onClick={handleAnalyze}
-                disabled={!file}
-              >
-                Analyze Resume
-              </button>
-            </section>
-          </div>
-        )}
-
-        {isAnalyzing && (
-          <div className="loader">
-            <div className="spinner"></div>
-            <p className="loader-text">Our AI is reviewing your resume...</p>
-          </div>
-        )}
-
-        {analysisResult && !isAnalyzing && (
-          <div className="results-layout">
-            <div className="results-main">
-              <section className="results-section glass" ref={analysisRef}>
-                <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Analysis Complete</h2>
-                <div className="markdown-body">
-                  <ReactMarkdown>{analysisResult}</ReactMarkdown>
-                </div>
-              </section>
-
-              {/* AI Resume Improver Section */}
-              <section className="resume-improver-section glass" style={{ marginTop: '2rem', padding: '3rem' }}>
-                <div style={{ width: '100%', textAlign: 'left', marginBottom: '2.5rem' }}>
-                  <label htmlFor="jobTargetImprover" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1.1rem' }}>Add Job Description / Target Job Role</label>
-                  <textarea 
-                    id="jobTargetImprover" 
-                    ref={jobTargetRef}
-                    placeholder="e.g. Software Engineer, OR paste the full job description here to optimize your resume..."
-                    value={jobTarget}
-                    onChange={(e) => setJobTarget(e.target.value)}
-                    style={{ 
-                      width: '100%', 
-                      padding: '1rem', 
-                      borderRadius: '12px', 
-                      border: '1px solid var(--border-color)', 
-                      background: 'rgba(0,0,0,0.3)', 
-                      color: 'var(--text-main)',
-                      minHeight: '120px',
-                      resize: 'vertical',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Update this before improving your resume to get targeted ATS optimization.</p>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '2rem' }}>
-                  <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">✨ AI Resume Improver</h2>
-                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '600px' }}>
-                    Let our AI rewrite and format your resume professionally. We'll optimize your content for ATS readability without inventing any false information.
-                  </p>
-                  {!improvedResume && !isImproving && (
-                    <button 
-                      className="btn-primary" 
-                      style={{ width: 'auto', minWidth: '250px' }}
-                      onClick={handleImproveResume}
-                    >
-                      ✨ Improve Resume with AI
-                    </button>
-                  )}
-                </div>
-
-                {isImproving && (
-                  <div className="loader" style={{ padding: '2rem 0' }}>
-                    <div className="spinner"></div>
-                    <p className="loader-text">Professionally rewriting your resume...</p>
-                  </div>
-                )}
-
-                {improverError && (
-                  <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                    <AlertCircle size={18} />
-                    <span>{improverError}</span>
-                  </div>
-                )}
-
-                {improvedResume && !isImproving && (
-                  <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-                    <div 
-                      id="improved-resume-preview"
-                      className="resume-preview" 
-                      dangerouslySetInnerHTML={{ __html: improvedResume }} 
-                    ></div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                      {improvedSuccessMsg && (
-                        <div className="success-message">
-                          <CheckCircle size={18} />
-                          {improvedSuccessMsg}
+        {currentView === 'upload' && (
+          <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)' }}>
+            <Sidebar 
+              activeItem={activeSidebarItem} 
+              setActiveItem={setActiveSidebarItem} 
+              hasAnalysis={!!analysisResult} 
+              onSubscriptionClick={() => setActiveSidebarItem('subscription')}
+            />
+            
+            <div style={{ flex: 1, padding: '2rem 3rem', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+              <TopHeader 
+                firebaseUser={firebaseUser} 
+                onSettingsClick={() => setShowSettings(true)} 
+                onSignOut={handleSignOut} 
+              />
+              
+              {/* ── UPLOAD view ── */}
+                  {activeSidebarItem === 'upload' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      {!analysisResult && !isAnalyzing && (
+                        <UploadCard 
+                          file={file} setFile={setFile} isDragging={isDragging} 
+                          handleDragOver={handleDragOver} handleDragLeave={handleDragLeave} 
+                          handleDrop={handleDrop} handleFileChange={handleFileChange}
+                          jobTarget={jobTarget} setJobTarget={setJobTarget} error={error} 
+                          handleAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} 
+                        />
+                      )}
+                      {isAnalyzing && (
+                        <div className="loader" style={{ alignSelf: 'center', marginTop: '4rem' }}>
+                          <div className="spinner"></div>
+                          <p className="loader-text">Our AI is reviewing your resume...</p>
+                        </div>
+                      )}
+                      {analysisResult && !isAnalyzing && (
+                        <div className="results-section glass" style={{ padding: '2rem', borderRadius: '20px' }}>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Resume already analyzed.</p>
+                          <button className="btn-primary" onClick={() => setActiveSidebarItem('analysis')} style={{ width: 'auto' }}>
+                            View Analysis Report →
+                          </button>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </section>
+                  )}
 
-              {improvedResume && !isImproving && (
-                <section className="resume-improver-section glass" style={{ marginTop: '2rem', padding: '3rem' }}>
-                  <div style={{ width: '100%', textAlign: 'left', marginBottom: '2.5rem' }}>
-                    <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">🎯 Target Job Analysis (Optional)</h2>
-                    <label htmlFor="jobDescription" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1.1rem' }}>Paste the Full Job Description</label>
-                    <textarea 
-                      id="jobDescription" 
-                      placeholder="Paste the full job description here to generate match report, job-specific resume, and cover letter..."
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      style={{ 
-                        width: '100%', 
-                        padding: '1rem', 
-                        borderRadius: '12px', 
-                        border: '1px solid var(--border-color)', 
-                        background: 'rgba(0,0,0,0.3)', 
-                        color: 'var(--text-main)',
-                        minHeight: '150px',
-                        resize: 'vertical',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-
-                  {!matchReport && !isGeneratingMatch && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <button 
-                        className="btn-primary" 
-                        style={{ width: 'auto', minWidth: '250px' }}
-                        onClick={handleAnalyzeMatch}
-                        disabled={!jobDescription.trim()}
-                      >
-                        📊 Analyze Match
-                      </button>
+                  {/* ── ATS ANALYSIS view ── */}
+                  {activeSidebarItem === 'analysis' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      {!analysisResult ? (
+                        <div className="glass" style={{ padding: '3rem', borderRadius: '20px', textAlign: 'center' }}>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>No analysis yet. Upload and analyze your resume first.</p>
+                          <button className="btn-primary" onClick={() => setActiveSidebarItem('upload')} style={{ width: 'auto' }}>Go to Upload →</button>
+                        </div>
+                      ) : (
+                        <section className="results-section glass" ref={analysisRef}>
+                          <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Analysis Complete</h2>
+                          <div className="markdown-body">
+                            <ReactMarkdown>{analysisResult}</ReactMarkdown>
+                          </div>
+                        </section>
+                      )}
                     </div>
                   )}
 
-                  {isGeneratingMatch && (
-                    <div className="loader" style={{ padding: '2rem 0' }}>
-                      <div className="spinner"></div>
-                      <p className="loader-text">Analyzing match and generating report...</p>
+                  {/* ── AI RESUME IMPROVER view ── */}
+                  {activeSidebarItem === 'improver' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      {!analysisResult ? (
+                        <div className="glass" style={{ padding: '3rem', borderRadius: '20px', textAlign: 'center' }}>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>Analyze your resume first to use the AI Improver.</p>
+                          <button className="btn-primary" onClick={() => setActiveSidebarItem('upload')} style={{ width: 'auto' }}>Go to Upload →</button>
+                        </div>
+                      ) : (
+                        <section className="resume-improver-section glass" style={{ padding: '3rem' }}>
+                          <div style={{ width: '100%', textAlign: 'left', marginBottom: '2.5rem' }}>
+                            <label htmlFor="jobTargetImprover" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1.1rem' }}>Add Job Description / Target Job Role</label>
+                            <textarea 
+                              id="jobTargetImprover" 
+                              ref={jobTargetRef}
+                              placeholder="e.g. Software Engineer, OR paste the full job description here to optimize your resume..."
+                              value={jobTarget}
+                              onChange={(e) => setJobTarget(e.target.value)}
+                              style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'var(--text-main)', minHeight: '120px', resize: 'vertical', boxSizing: 'border-box' }}
+                            />
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Update this before improving your resume to get targeted ATS optimization.</p>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">✨ AI Resume Improver</h2>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '600px' }}>Let our AI rewrite and format your resume professionally. We'll optimize your content for ATS readability without inventing any false information.</p>
+                            {!improvedResume && !isImproving && (
+                              <button className="btn-primary" style={{ width: 'auto', minWidth: '250px' }} onClick={handleImproveResume}>✨ Improve Resume with AI</button>
+                            )}
+                          </div>
+                          {isImproving && (
+                            <div className="loader" style={{ padding: '2rem 0' }}>
+                              <div className="spinner"></div>
+                              <p className="loader-text">Professionally rewriting your resume...</p>
+                            </div>
+                          )}
+                          {improverError && (
+                            <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                              <AlertCircle size={18} /><span>{improverError}</span>
+                            </div>
+                          )}
+                          {improvedResume && !isImproving && (
+                            <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
+                              <div id="improved-resume-preview" className="resume-preview" dangerouslySetInnerHTML={{ __html: improvedResume }}></div>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                                {improvedSuccessMsg && (
+                                  <div className="success-message"><CheckCircle size={18} />{improvedSuccessMsg}</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </section>
+                      )}
                     </div>
                   )}
 
-                  {matchError && (
-                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                      <AlertCircle size={18} />
-                      <span>{matchError}</span>
+                  {/* ── JOB ROLE MATCHER view ── */}
+                  {activeSidebarItem === 'matcher' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      {!analysisResult ? (
+                        <div className="glass" style={{ padding: '3rem', borderRadius: '20px', textAlign: 'center' }}>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>Analyze your resume first to use Job Role Matcher.</p>
+                          <button className="btn-primary" onClick={() => setActiveSidebarItem('upload')} style={{ width: 'auto' }}>Go to Upload →</button>
+                        </div>
+                      ) : (
+                        <section className="resume-improver-section glass" style={{ padding: '3rem' }}>
+                          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem' }} className="text-gradient">🎯 Job Role Matcher</h2>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '600px' }}>Paste a full job description below to generate a detailed match report, a tailored job-specific resume, and an AI cover letter.</p>
+                          {!improvedResume && (
+                            <div className="glass" style={{ padding: '1.25rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)' }}>
+                              <p style={{ color: '#f59e0b', margin: 0, fontSize: '0.9rem' }}>⚠️ Run AI Resume Improver first for best results. <button onClick={() => setActiveSidebarItem('improver')} style={{ background: 'none', border: 'none', color: '#a78bfa', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: '0.9rem' }}>Go to Improver →</button></p>
+                            </div>
+                          )}
+                          <div style={{ width: '100%', marginBottom: '1.5rem' }}>
+                            <label htmlFor="jobDescription" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1rem' }}>Paste the Full Job Description</label>
+                            <textarea 
+                              id="jobDescription"
+                              placeholder="Paste the full job description here to generate match report, job-specific resume, and cover letter..."
+                              value={jobDescription}
+                              onChange={(e) => setJobDescription(e.target.value)}
+                              style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'var(--text-main)', minHeight: '150px', resize: 'vertical', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          {!matchReport && !isGeneratingMatch && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <button className="btn-primary" style={{ width: 'auto', minWidth: '250px' }} onClick={handleAnalyzeMatch} disabled={!jobDescription.trim()}>📊 Analyze Match</button>
+                            </div>
+                          )}
+                          {isGeneratingMatch && (
+                            <div className="loader" style={{ padding: '2rem 0' }}><div className="spinner"></div><p className="loader-text">Analyzing match and generating report...</p></div>
+                          )}
+                          {matchError && (
+                            <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                              <AlertCircle size={18} /><span>{matchError}</span>
+                            </div>
+                          )}
+                          {matchReport && !isGeneratingMatch && (
+                            <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '2rem' }}>
+                              <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Resume Match Report</h2>
+                              <div className="markdown-body"><ReactMarkdown>{matchReport}</ReactMarkdown></div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
+                                {!jobSpecificResume && !isGeneratingJobSpecific && (
+                                  <button className="btn-primary" onClick={handleGenerateJobSpecificResume}>📝 Generate Job-Specific Resume</button>
+                                )}
+                                {!coverLetter && !isGeneratingCoverLetter && (
+                                  <button className="btn-primary" onClick={handleGenerateCoverLetter}>✉️ Generate AI Cover Letter</button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {isGeneratingJobSpecific && (
+                            <div className="loader" style={{ padding: '2rem 0' }}><div className="spinner"></div><p className="loader-text">Generating tailored job-specific resume...</p></div>
+                          )}
+                          {jobSpecificError && (
+                            <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                              <AlertCircle size={18} /><span>{jobSpecificError}</span>
+                            </div>
+                          )}
+                          {jobSpecificResume && !isGeneratingJobSpecific && (
+                            <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem' }}>
+                              <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Job-Specific Resume</h2>
+                              <div id="job-specific-resume-preview" className="resume-preview" dangerouslySetInnerHTML={{ __html: jobSpecificResume }}></div>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button className="btn-primary" onClick={handleDownloadJobSpecificPDF} disabled={isDownloadingJobSpecificPDF} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: 'auto', minWidth: '250px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}>
+                                  <Download size={18} />{isDownloadingJobSpecificPDF ? 'Generating...' : 'Download Job-Specific PDF'}
+                                </button>
+                                {jobSpecificSuccessMsg && <div className="success-message"><CheckCircle size={18} />{jobSpecificSuccessMsg}</div>}
+                              </div>
+                            </div>
+                          )}
+                          {isGeneratingCoverLetter && (
+                            <div className="loader" style={{ padding: '2rem 0' }}><div className="spinner"></div><p className="loader-text">Generating professional cover letter...</p></div>
+                          )}
+                          {coverLetterError && (
+                            <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                              <AlertCircle size={18} /><span>{coverLetterError}</span>
+                            </div>
+                          )}
+                          {coverLetter && !isGeneratingCoverLetter && (
+                            <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem', position: 'relative' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', margin: 0 }}>AI Cover Letter</h2>
+                                <button onClick={handleCopyCoverLetter} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }} title="Copy Cover Letter">
+                                  <Copy size={16} />Copy
+                                </button>
+                              </div>
+                              {coverLetterCopySuccessMsg && (
+                                <div style={{ color: 'var(--success)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <CheckCircle size={16} />{coverLetterCopySuccessMsg}
+                                </div>
+                              )}
+                              <div className="markdown-body"><ReactMarkdown>{coverLetter}</ReactMarkdown></div>
+                            </div>
+                          )}
+                        </section>
+                      )}
                     </div>
                   )}
 
-                  {matchReport && !isGeneratingMatch && (
-                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '2rem' }}>
-                      <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Resume Match Report</h2>
-                      <div className="markdown-body">
-                        <ReactMarkdown>{matchReport}</ReactMarkdown>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
-                        {!jobSpecificResume && !isGeneratingJobSpecific && (
-                          <button 
-                            className="btn-primary" 
-                            onClick={handleGenerateJobSpecificResume}
-                          >
-                            📝 Generate Job-Specific Resume
-                          </button>
-                        )}
-                        {!coverLetter && !isGeneratingCoverLetter && (
-                          <button 
-                            className="btn-primary" 
-                            onClick={handleGenerateCoverLetter}
-                          >
-                            ✉️ Generate AI Cover Letter
-                          </button>
-                        )}
-                      </div>
+                  {/* ── CAREER INSIGHTS view ── */}
+                  {activeSidebarItem === 'insights' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      {!analysisResult ? (
+                        <div className="glass" style={{ padding: '3rem', borderRadius: '20px', textAlign: 'center' }}>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>Analyze your resume first to unlock Career Insights.</p>
+                          <button className="btn-primary" onClick={() => setActiveSidebarItem('upload')} style={{ width: 'auto' }}>Go to Upload →</button>
+                        </div>
+                      ) : (
+                        <section className="glass" style={{ padding: '2.5rem', borderRadius: '20px' }}>
+                          <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }} className="text-gradient">📈 Career Insights</h2>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Insights derived from your latest resume analysis.</p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                            {[
+                              { icon: '🎯', title: 'ATS Compatibility', desc: 'Your resume analysis includes ATS keyword coverage and formatting tips.', action: 'View Analysis', view: 'analysis' },
+                              { icon: '✨', title: 'AI-Enhanced Version', desc: improvedResume ? 'Your AI-improved resume is ready to download.' : 'Run the AI Improver to get an optimized version of your resume.', action: improvedResume ? 'View Improved Resume' : 'Run AI Improver', view: 'improver' },
+                              { icon: '🎯', title: 'Job Match Score', desc: matchReport ? 'Your job match report has been generated.' : 'Generate a match report by pasting a job description.', action: matchReport ? 'View Match Report' : 'Go to Matcher', view: 'matcher' },
+                              { icon: '✉️', title: 'Cover Letter', desc: coverLetter ? 'Your AI-generated cover letter is ready.' : 'Generate a tailored cover letter for your target role.', action: coverLetter ? 'View Cover Letter' : 'Generate Cover Letter', view: 'matcher' },
+                            ].map((card, i) => (
+                              <div key={i} className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <span style={{ fontSize: '2rem' }}>{card.icon}</span>
+                                <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600 }}>{card.title}</h3>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', flex: 1 }}>{card.desc}</p>
+                                <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', width: 'auto', alignSelf: 'flex-start' }} onClick={() => setActiveSidebarItem(card.view)}>{card.action}</button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.05)' }}>
+                            <h3 style={{ margin: '0 0 0.75rem', color: '#a78bfa', fontSize: '1rem' }}>📋 Full Analysis Report</h3>
+                            <div className="markdown-body" style={{ maxHeight: '300px', overflow: 'auto' }}>
+                              <ReactMarkdown>{analysisResult}</ReactMarkdown>
+                            </div>
+                            <button className="btn-secondary" style={{ marginTop: '1rem', fontSize: '0.85rem', width: 'auto' }} onClick={() => setActiveSidebarItem('analysis')}>View Full Report →</button>
+                          </div>
+                        </section>
+                      )}
                     </div>
                   )}
 
-                  {isGeneratingJobSpecific && (
-                    <div className="loader" style={{ padding: '2rem 0' }}>
-                      <div className="spinner"></div>
-                      <p className="loader-text">Generating tailored job-specific resume...</p>
-                    </div>
-                  )}
-
-                  {jobSpecificError && (
-                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                      <AlertCircle size={18} />
-                      <span>{jobSpecificError}</span>
-                    </div>
-                  )}
-
-                  {jobSpecificResume && !isGeneratingJobSpecific && (
-                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem' }}>
-                      <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Job-Specific Resume</h2>
-                      <div 
-                        id="job-specific-resume-preview"
-                        className="resume-preview" 
-                        dangerouslySetInnerHTML={{ __html: jobSpecificResume }} 
-                      ></div>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-                        <button 
-                          className="btn-primary" 
-                          onClick={handleDownloadJobSpecificPDF}
-                          disabled={isDownloadingJobSpecificPDF}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: 'auto', minWidth: '250px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)', border: 'none' }}
-                        >
-                          <Download size={18} />
-                          {isDownloadingJobSpecificPDF ? 'Generating...' : 'Download Job-Specific PDF'}
-                        </button>
-                        {jobSpecificSuccessMsg && (
-                          <div className="success-message">
-                            <CheckCircle size={18} />
-                            {jobSpecificSuccessMsg}
+                  {/* ── SAVED REPORTS view ── */}
+                  {activeSidebarItem === 'reports' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      <section className="glass" style={{ padding: '2.5rem', borderRadius: '20px' }}>
+                        <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }} className="text-gradient">📁 Saved Reports</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Your generated analysis reports will appear here. Firebase storage integration coming soon.</p>
+                        {analysisResult ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span style={{ fontSize: '1.75rem' }}>📄</span>
+                                <div>
+                                  <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>{file?.name || 'Resume Analysis'}</p>
+                                  <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Current session · {new Date().toLocaleDateString()}</p>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem', width: 'auto' }} onClick={() => setActiveSidebarItem('analysis')}>View Report</button>
+                                <button className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem', width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={handleDownloadPDF} disabled={isDownloadingPDF}>
+                                  <Download size={14} />{isDownloadingPDF ? 'Generating...' : 'Download PDF'}
+                                </button>
+                              </div>
+                            </div>
+                            {improvedResume && (
+                              <div className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                  <span style={{ fontSize: '1.75rem' }}>✨</span>
+                                  <div>
+                                    <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>AI-Improved Resume</p>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Current session · {new Date().toLocaleDateString()}</p>
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                  <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem', width: 'auto' }} onClick={() => setActiveSidebarItem('improver')}>View</button>
+                                  <button className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 1rem', width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }} onClick={handleDownloadImprovedPDF} disabled={isDownloadingImprovedPDF}>
+                                    <Download size={14} />{isDownloadingImprovedPDF ? 'Generating...' : 'Download PDF'}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                            <span style={{ fontSize: '3rem' }}>📂</span>
+                            <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>No reports yet. Upload and analyze a resume to get started.</p>
+                            <button className="btn-primary" style={{ width: 'auto', marginTop: '1rem' }} onClick={() => setActiveSidebarItem('upload')}>Upload Resume →</button>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  )}
-
-                  {isGeneratingCoverLetter && (
-                    <div className="loader" style={{ padding: '2rem 0' }}>
-                      <div className="spinner"></div>
-                      <p className="loader-text">Generating professional cover letter...</p>
-                    </div>
-                  )}
-
-                  {coverLetterError && (
-                    <div style={{ color: 'var(--danger)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                      <AlertCircle size={18} />
-                      <span>{coverLetterError}</span>
-                    </div>
-                  )}
-
-                  {coverLetter && !isGeneratingCoverLetter && (
-                    <div style={{ animation: 'fadeIn 0.5s ease-out', marginTop: '3rem', position: 'relative' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', margin: 0 }}>AI Cover Letter</h2>
-                        <button 
-                          onClick={handleCopyCoverLetter}
-                          className="btn-secondary"
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                          title="Copy Cover Letter"
-                        >
-                          <Copy size={16} />
-                          Copy
-                        </button>
-                      </div>
-                      
-                      {coverLetterCopySuccessMsg && (
-                        <div style={{ color: 'var(--success)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <CheckCircle size={16} />
-                          {coverLetterCopySuccessMsg}
+                        <div className="glass" style={{ marginTop: '2rem', padding: '1.25rem', borderRadius: '14px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.05)' }}>
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>🔒 <strong style={{ color: '#a78bfa' }}>Coming soon:</strong> Reports will be saved automatically to your account via Firebase, allowing you to access them from any device.</p>
                         </div>
-                      )}
-
-                      <div className="markdown-body">
-                        <ReactMarkdown>{coverLetter}</ReactMarkdown>
-                      </div>
+                      </section>
                     </div>
                   )}
-                </section>
-              )}
+
+                  {/* ── SETTINGS view ── */}
+                  {activeSidebarItem === 'settings' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      <section className="glass" style={{ padding: '2.5rem', borderRadius: '20px' }}>
+                        <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }} className="text-gradient">⚙️ Settings</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Manage your API key and application preferences.</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '560px' }}>
+                          <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)' }}>🔑 Gemini API Key</h3>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}>
+                              <label htmlFor="settingsApiKey">API Key</label>
+                              <input 
+                                type="password"
+                                id="settingsApiKey"
+                                placeholder="Enter your Gemini API Key"
+                                defaultValue={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                              />
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>Your API key is only stored locally and never sent to our servers.</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                              <button className="btn-primary" style={{ width: 'auto' }} onClick={() => saveApiKey(document.getElementById('settingsApiKey').value)}>Save Key</button>
+                              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="btn-secondary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', width: 'auto' }}>Get Free API Key ↗</a>
+                            </div>
+                          </div>
+                          <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)' }}>👤 Account</h3>
+                            {firebaseUser ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Signed in as: <strong style={{ color: 'var(--text-main)' }}>{firebaseUser.displayName || firebaseUser.email || firebaseUser.phoneNumber}</strong></p>
+                                <button className="btn-secondary" style={{ width: 'auto', alignSelf: 'flex-start' }} onClick={handleSignOut}>Sign Out</button>
+                              </div>
+                            ) : (
+                              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Not signed in. Authentication is managed on the home page.</p>
+                            )}
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  )}
+
+                  {/* ── SUBSCRIPTION view ── */}
+                  {activeSidebarItem === 'subscription' && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      <section className="glass" style={{ padding: '2.5rem', borderRadius: '20px' }}>
+                        <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }} className="text-gradient">💳 Manage Subscription</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem' }}>Choose the plan that works best for you. Payment integration via Razorpay/Stripe coming soon.</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                          {[
+                            { name: 'Free', price: '₹0', period: '/ month', features: ['5 Resume Analyses', 'Basic ATS Check', 'PDF Download'], badge: null, current: false },
+                            { name: 'Pro', price: '₹499', period: '/ month', features: ['Unlimited Analyses', 'AI Resume Improver', 'Job Role Matcher', 'Career Insights', 'Priority Support'], badge: 'Current Plan', current: true },
+                            { name: 'Enterprise', price: '₹999', period: '/ month', features: ['Everything in Pro', 'Team Dashboard', 'Bulk Analysis', 'Custom Branding', 'Dedicated Support'], badge: 'Coming Soon', current: false },
+                          ].map((plan, i) => (
+                            <div key={i} className="glass" style={{ padding: '2rem', borderRadius: '20px', border: plan.current ? '1px solid rgba(139,92,246,0.5)' : '1px solid rgba(255,255,255,0.06)', position: 'relative', background: plan.current ? 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.08))' : 'transparent', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                              {plan.badge && (
+                                <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: plan.current ? 'linear-gradient(135deg, #8b5cf6, #3b82f6)' : 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '0.25rem 0.75rem', borderRadius: '20px', whiteSpace: 'nowrap' }}>{plan.badge}</span>
+                              )}
+                              <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>{plan.name}</h3>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                                <span style={{ fontSize: '2rem', fontWeight: 800, color: plan.current ? '#a78bfa' : 'var(--text-main)' }}>{plan.price}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{plan.period}</span>
+                              </div>
+                              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                                {plan.features.map((f, j) => (
+                                  <li key={j} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                    <CheckCircle size={14} color="var(--success)" />{f}
+                                  </li>
+                                ))}
+                              </ul>
+                              <button className={plan.current ? 'btn-secondary' : 'btn-primary'} style={{ width: '100%', opacity: plan.name === 'Enterprise' ? 0.5 : 1, cursor: plan.name === 'Enterprise' ? 'not-allowed' : 'pointer' }} disabled={plan.name === 'Enterprise'}>
+                                {plan.current ? 'Current Plan' : plan.name === 'Enterprise' ? 'Coming Soon' : 'Upgrade'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="glass" style={{ padding: '1.25rem', borderRadius: '14px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.05)' }}>
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>🔒 <strong style={{ color: '#a78bfa' }}>Secure Payments:</strong> Payment processing via Razorpay and Stripe will be integrated in the next release. Your subscription data will be managed securely through Firebase.</p>
+                        </div>
+                      </section>
+                    </div>
+                  )}
             </div>
 
-            {/* Sticky Sidebar */}
             <aside className="action-sidebar">
-              <div className="action-panel glass">
-                <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: '600' }}>Quick Actions</h3>
+              <div style={{ position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingRight: '20px', marginTop: '20px' }}>
+                {analysisResult && <ATSScoreCard score={88} />}
                 
-                <div className="action-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+                <div className="action-panel glass" style={{ padding: '1.5rem', borderRadius: '20px' }}>
+                  <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', fontSize: '1.1rem', fontWeight: '600' }}>Quick Actions</h3>
+                  
+                  <div className="action-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
                   <button 
                     className="btn-secondary" 
                     onClick={() => {
@@ -863,7 +1007,7 @@ function App() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}
                   >
                     <BarChart size={18} />
-                    View ATS Score
+                    View Analysis
                   </button>
 
                   {!improvedResume && (
@@ -871,7 +1015,7 @@ function App() {
                       className="btn-primary" 
                       onClick={handleImproveResume}
                       disabled={isImproving}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)', border: 'none' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)', border: 'none' }}
                     >
                       <Sparkles size={18} />
                       {isImproving ? 'Improving...' : 'AI Resume Improver'}
@@ -883,7 +1027,7 @@ function App() {
                       className="btn-primary" 
                       onClick={handleDownloadImprovedPDF}
                       disabled={isDownloadingImprovedPDF}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)', border: 'none' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
                     >
                       <Download size={18} />
                       {isDownloadingImprovedPDF ? 'Generating...' : 'Download Improved PDF'}
@@ -897,7 +1041,7 @@ function App() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}
                   >
                     <Download size={18} />
-                    {isDownloadingPDF ? 'Generating...' : 'Download Analysis Report'}
+                    {isDownloadingPDF ? 'Generating...' : 'Download Report'}
                   </button>
 
                   <button 
@@ -928,14 +1072,21 @@ function App() {
                   </button>
                 </div>
               </div>
-            </aside>
-          </div>
-        )}
-      </main>
+            </div>
+          </aside>
+        </div>
+      )}
+    </main>
 
-      <footer className="footer">
-        Resume Mentor AI &copy; 2026 • Powered by Moumita De Panja
-      </footer>
+      {isPreview ? (
+        <div className="ui-preview-root" style={{ minHeight: 'unset', padding: 0 }}>
+          <Footer />
+        </div>
+      ) : (
+        <footer className="footer">
+          Resume Mentor AI &copy; 2026 • Powered by Moumita De Panja
+        </footer>
+      )}
 
       {showSettings && (
         <div className="modal-overlay" onClick={() => setShowSettings(false)}>
