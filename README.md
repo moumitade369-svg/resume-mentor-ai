@@ -1,16 +1,33 @@
-# React + Vite
+Create a professional README.md for my Resume Mentor AI project.
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Project details:
+- Project Name: Resume Mentor AI
+- Description: AI-powered Resume Analysis and Career Guidance Platform
+- Tech Stack: React.js, Vite, JavaScript, Firebase Authentication, Firebase Cloud Functions, Google Gemini AI, Netlify
+- Features:
+  - AI Resume Analysis
+  - ATS Resume Score
+  - AI-powered resume improvement suggestions
+  - Career guidance and skill recommendations
+  - Modern responsive UI
 
-Currently, two official plugins are available:
+Live Demo:
+https://symphonious-cranachan-7cfbe5.netlify.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+GitHub:
+https://github.com/moumitade369-svg/resume-mentor-ai
 
-## React Compiler
+Author:
+Moumita De Panja
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Create a clean, professional, recruiter-friendly README.
+Include:
+- Project overview
+- Features
+- Tech stack
+- Live demo
+- Screenshots placeholder
+- Author section
+- Contact links
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Do not include unnecessary technical documentation like installation steps or folder structure.
