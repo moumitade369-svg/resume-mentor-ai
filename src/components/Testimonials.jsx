@@ -1,50 +1,92 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+const TESTIMONIALS = [
+  {
+    name: 'Sarah Jenkins',
+    role: 'Software Engineer',
+    company: 'TechCorp',
+    rating: 5,
+    quote:
+      'Resume Mentor AI completely transformed my resume. I went from getting no callbacks to scheduling 4 interviews in a single week. Absolutely incredible.',
+    initials: 'SJ',
+    gradient: 'linear-gradient(135deg, #4f46e5, #818cf8)',
+  },
+  {
+    name: 'David Chen',
+    role: 'Product Manager',
+    company: 'StartupX',
+    rating: 5,
+    quote:
+      'The ATS optimization feature is incredible. It highlighted keywords I was missing and the AI rewrites were spot-on professional. Landed my dream PM role!',
+    initials: 'DC',
+    gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+  },
+  {
+    name: 'Emily Rodriguez',
+    role: 'Marketing Specialist',
+    company: 'Global Agency',
+    rating: 5,
+    quote:
+      'The interface is stunning and the results speak for themselves. This is the best resume tool I have ever used. Got 3 job offers within a month!',
+    initials: 'ER',
+    gradient: 'linear-gradient(135deg, #10b981, #22d3ee)',
+  },
+];
+
 export default function Testimonials() {
-  const testimonials = [
-    { name: "Sarah Jenkins", role: "Software Engineer", company: "TechCorp", content: "Resume Mentor AI completely transformed my resume. I went from getting no callbacks to scheduling 4 interviews in a week.", rating: 5 },
-    { name: "David Chen", role: "Product Manager", company: "StartupX", content: "The ATS optimization feature is incredible. It highlighted keywords I was missing and the AI rewrites were spot-on professional.", rating: 5 },
-    { name: "Emily Rodriguez", role: "Marketing Specialist", company: "Global Agency", content: "The interface is beautiful and the results speak for themselves. This is the best tool I've used for career advancement.", rating: 5 }
-  ];
-
   return (
-    <section style={{ padding: '6rem 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '1rem' }}>Loved by Professionals</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.125rem' }}>See what others are saying about our platform.</p>
-      </div>
+    <section id="testimonials" className="section">
+      <div className="section-inner">
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="badge">✦ Success Stories</div>
+          <h2>
+            Loved by{' '}
+            <span className="grad-text">Professionals</span>
+          </h2>
+          <p>See what real users say about their resume transformation experience.</p>
+        </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-        {testimonials.map((test, index) => (
-          <motion.div
-            key={index}
-            className="glass-card"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1 }}
-            style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
-          >
-            <div>
-              <div style={{ color: '#F59E0B', letterSpacing: '2px', marginBottom: '1.5rem' }}>
-                {'★'.repeat(test.rating)}
+        <div className="testi-grid">
+          {TESTIMONIALS.map((t, i) => (
+            <motion.div
+              key={i}
+              className="testi-card"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.12 }}
+            >
+              {/* Stars */}
+              <div className="testi-stars">
+                {'★'.repeat(t.rating)}
               </div>
-              <p style={{ color: '#fff', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '2rem', fontStyle: 'italic' }}>
-                "{test.content}"
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '1.25rem' }}>
-                {test.name.charAt(0)}
+
+              {/* Quote */}
+              <p className="testi-quote">"{t.quote}"</p>
+
+              {/* Author */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                <div
+                  className="testi-avatar"
+                  style={{ background: t.gradient }}
+                >
+                  {t.initials}
+                </div>
+                <div>
+                  <div className="testi-name">{t.name}</div>
+                  <div className="testi-role">{t.role}, {t.company}</div>
+                </div>
               </div>
-              <div>
-                <h4 style={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>{test.name}</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{test.role}, {test.company}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -17,7 +17,7 @@ import Statistics from './components/Statistics';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
-import './UIPreview.css'; // Premium CSS
+import './Redesign.css'; // Redesign CSS
 import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
 import UploadCard from './components/UploadCard';
@@ -25,7 +25,6 @@ import ATSScoreCard from './components/ATSScoreCard';
 import { motion } from 'framer-motion';
 
 function App() {
-  const isPreview = window.location.pathname === '/ui-preview' || window.location.pathname === '/homepage-preview';
 
   const [apiKey, setApiKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -385,8 +384,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {isPreview ? (
-        <Navbar 
+      <Navbar 
           firebaseUser={firebaseUser}
           handleSignOut={handleSignOut}
           setShowSettings={setShowSettings}
@@ -394,129 +392,24 @@ function App() {
           setCurrentView={setCurrentView}
           setAnalysisResult={setAnalysisResult}
         />
-      ) : (
-        <header className="header">
-          <div className="logo" onClick={() => { setCurrentView('home'); setAnalysisResult(''); }} style={{cursor: 'pointer'}}>
-            <FileText size={28} color="#a78bfa" />
-            <span>Resume <span className="logo-accent">Mentor AI</span></span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {firebaseUser && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {firebaseUser.displayName || firebaseUser.phoneNumber || firebaseUser.email}
-                </span>
-                <button
-                  className="settings-btn"
-                  onClick={handleSignOut}
-                  title="Sign Out"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            )}
-            <button 
-              className="settings-btn" 
-              onClick={() => setShowSettings(true)}
-              title="Settings (API Key)"
-            >
-              <Settings size={20} />
-            </button>
-          </div>
-        </header>
-      )}
 
-      <main className="main-content">
+      <main className="main-content" style={{ paddingTop: currentView === 'home' ? '0' : '68px' }}>
         {!analysisResult && !isAnalyzing && currentView === 'home' && (
-          isPreview ? (
-            <div className="ui-preview-root" style={{ minHeight: 'unset', padding: 0 }}>
-              <Hero setCurrentView={setCurrentView} />
-              <Features />
-              <HowItWorks />
-              <Comparison />
-              <WhyChooseUs />
-              <Statistics />
-              <Testimonials />
-              <FAQ />
+          <div className="redesign-root">
+            {/* Fixed background nebula lighting */}
+            <div className="page-bg">
+              <div className="star-grid" />
             </div>
-          ) : (
-            <div className="landing-wrapper">
-              <section className="hero">
-                <div className="hero-badge">✨ Next Generation Resume AI</div>
-                <h1>Build Your Perfect Resume with AI</h1>
-                <p>
-                  Create ATS-friendly resumes with AI-powered suggestions and improve your resume professionally.
-                </p>
-              </section>
-
-              <section className="info-cards-container">
-                <div className="info-card glass">
-                  <div className="info-icon">📄</div>
-                  <h3>Before Improvement Report</h3>
-                  <p>Preview your original resume report before AI optimization.</p>
-                </div>
-                <div className="info-card glass">
-                  <div className="info-icon">✨</div>
-                  <h3>After Improvement Report</h3>
-                  <p>Download your AI improved resume after analysis.</p>
-                </div>
-              </section>
-
-              <section className="cta-section" style={{ textAlign: 'center', margin: '2rem 0' }}>
-                <button 
-                  className="btn-primary" 
-                  onClick={() => setCurrentView('api-key')}
-                  style={{ fontSize: '1.5rem', padding: '1.2rem 3rem', borderRadius: '50px', width: 'auto' }}
-                >
-                  Get Started
-                </button>
-              </section>
-
-              <section className="features-section">
-                <h2 className="section-title">Premium Features</h2>
-                <div className="features-grid">
-                  <div className="feature-card glass">
-                    <div className="feature-icon">🔍</div>
-                    <h4>AI Resume Analysis</h4>
-                  </div>
-                  <div className="feature-card glass">
-                    <div className="feature-icon">⚡</div>
-                    <h4>ATS Optimization</h4>
-                  </div>
-                  <div className="feature-card glass">
-                    <div className="feature-icon">📈</div>
-                    <h4>Resume Improvement</h4>
-                  </div>
-                  <div className="feature-card glass">
-                    <div className="feature-icon">💡</div>
-                    <h4>AI Suggestions</h4>
-                  </div>
-                  <div className="feature-card glass">
-                    <div className="feature-icon">🎯</div>
-                    <h4>Keyword Scanner</h4>
-                  </div>
-                  <div className="feature-card glass">
-                    <div className="feature-icon">📄</div>
-                    <h4>Download PDF</h4>
-                  </div>
-                </div>
-              </section>
-
-              <section className="how-it-works-section">
-                <h2 className="section-title">How It Works</h2>
-                <div className="steps-container">
-                  <div className="step glass">Upload Resume</div>
-                  <div className="step-arrow">↓</div>
-                  <div className="step glass">Analyze Resume</div>
-                  <div className="step-arrow">↓</div>
-                  <div className="step glass">Improve Resume</div>
-                  <div className="step-arrow">↓</div>
-                  <div className="step glass">Download Report</div>
-                </div>
-              </section>
-            </div>
-          )
+            <Hero setCurrentView={setCurrentView} />
+            <Features />
+            <HowItWorks />
+            <Comparison />
+            <WhyChooseUs />
+            <Statistics />
+            <Testimonials />
+            <FAQ />
+            <Footer setCurrentView={setCurrentView} />
+          </div>
         )}
 
         {!analysisResult && !isAnalyzing && currentView === 'api-key' && (
@@ -1078,15 +971,7 @@ function App() {
       )}
     </main>
 
-      {isPreview ? (
-        <div className="ui-preview-root" style={{ minHeight: 'unset', padding: 0 }}>
-          <Footer />
-        </div>
-      ) : (
-        <footer className="footer">
-          Resume Mentor AI &copy; 2026 • Powered by Moumita De Panja
-        </footer>
-      )}
+
 
       {showSettings && (
         <div className="modal-overlay" onClick={() => setShowSettings(false)}>

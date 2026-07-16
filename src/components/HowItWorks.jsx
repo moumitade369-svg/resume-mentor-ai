@@ -1,48 +1,133 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, Search, PenTool, FileDown } from 'lucide-react';
+import { UploadCloud, BrainCircuit, Target, FileDown } from 'lucide-react';
+
+const STEPS = [
+  {
+    num: '01',
+    Icon: UploadCloud,
+    color: '#22d3ee',
+    glow: 'rgba(34,211,238,0.25)',
+    bg: 'rgba(34,211,238,0.1)',
+    border: 'rgba(34,211,238,0.3)',
+    title: 'Upload Resume',
+    desc: 'Drag & drop or browse to upload your resume in PDF or DOCX format. Takes under 5 seconds.',
+  },
+  {
+    num: '02',
+    Icon: BrainCircuit,
+    color: '#818cf8',
+    glow: 'rgba(129,140,248,0.25)',
+    bg: 'rgba(129,140,248,0.1)',
+    border: 'rgba(129,140,248,0.3)',
+    title: 'AI Deep Analysis',
+    desc: 'Our AI engine performs a comprehensive ATS audit, keyword gap analysis, and format check in real-time.',
+  },
+  {
+    num: '03',
+    Icon: Target,
+    color: '#ec4899',
+    glow: 'rgba(236,72,153,0.25)',
+    bg: 'rgba(236,72,153,0.1)',
+    border: 'rgba(236,72,153,0.3)',
+    title: 'Get AI Suggestions',
+    desc: 'Receive prioritized, actionable improvements. Match against any job description for targeted optimization.',
+  },
+  {
+    num: '04',
+    Icon: FileDown,
+    color: '#10b981',
+    glow: 'rgba(16,185,129,0.25)',
+    bg: 'rgba(16,185,129,0.1)',
+    border: 'rgba(16,185,129,0.3)',
+    title: 'Download & Apply',
+    desc: 'Download your polished, ATS-optimized resume as a professional PDF and start applying with confidence.',
+  },
+];
 
 export default function HowItWorks() {
-  const steps = [
-    { icon: <UploadCloud size={24} />, title: 'Upload Resume', desc: 'PDF or DOCX format' },
-    { icon: <Search size={24} />, title: 'AI Analysis', desc: 'Instant ATS & keyword scan' },
-    { icon: <PenTool size={24} />, title: 'Optimization', desc: 'AI rewrites & improves' },
-    { icon: <FileDown size={24} />, title: 'Download Report', desc: 'Get your polished PDF' },
-  ];
-
   return (
-    <section id="how-it-works" style={{ padding: '6rem 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '1rem' }}>How It Works</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.125rem' }}>Four simple steps to a better resume.</p>
-      </div>
+    <section id="how-it-works" className="section">
+      <div className="section-inner">
+        {/* Heading */}
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="badge">✦ The Process</div>
+          <h2>
+            How{' '}
+            <span className="grad-text">Resume Mentor AI</span> Works
+          </h2>
+          <p>
+            From upload to interview-ready resume in four simple steps.
+          </p>
+        </motion.div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', flexWrap: 'wrap', gap: '2rem' }}>
-        {/* Connecting Line for Desktop */}
-        <div className="desktop-only" style={{ position: 'absolute', top: '40px', left: '10%', right: '10%', height: '2px', background: 'var(--border-color)', zIndex: 0 }}></div>
+        {/* Steps grid */}
+        <div className="steps-grid">
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={i}
+              className="step-card"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.12 }}
+              whileHover={{
+                y: -4,
+                boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 28px ${step.glow}`,
+                borderColor: step.border,
+              }}
+            >
+              {/* Soft glow blob in corner */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: step.glow,
+                  filter: 'blur(22px)',
+                  pointerEvents: 'none',
+                }}
+              />
 
-        {steps.map((step, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.2 }}
-            style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', flex: '1 1 200px' }}
-          >
-            <div style={{ 
-              width: '80px', height: '80px', borderRadius: '50%', 
-              background: 'var(--surface)', border: '2px solid var(--primary)', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--primary)', marginBottom: '1.5rem',
-              boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)'
-            }}>
-              {step.icon}
-            </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem' }}>{step.title}</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{step.desc}</p>
-          </motion.div>
-        ))}
+              {/* Icon */}
+              <div
+                className="step-icon-box"
+                style={{
+                  background: step.bg,
+                  border: `1px solid ${step.border}`,
+                  boxShadow: `0 0 20px ${step.glow}`,
+                }}
+              >
+                <step.Icon size={26} color={step.color} />
+              </div>
+
+              {/* Number */}
+              <span
+                className="step-num"
+                style={{
+                  background: `linear-gradient(90deg, ${step.color}, #fff)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                STEP {step.num}
+              </span>
+
+              <h3 className="step-title">{step.title}</h3>
+              <p className="step-desc">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

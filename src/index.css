@@ -1,89 +1,131 @@
+/* ═══════════════════════════════════════════════════════
+   index.css — Global Reset & Design Tokens
+   Resume Mentor AI · Premium AI SaaS
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────── */
 :root {
-  --primary: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --primary-glow: rgba(139, 92, 246, 0.4);
-  --secondary: #3b82f6;
-  --bg-color: #070B16;
-  --bg-sidebar: #0B1220;
-  --bg-card: rgba(18, 24, 38, 0.7); /* #121826 with opacity for glass */
-  --bg-elevated: #121826;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Brand palette */
+  --primary:        #4f46e5;
+  --primary-light:  #818cf8;
+  --pink:           #ec4899;
+  --cyan:           #22d3ee;
+  --green:          #10b981;
+  --amber:          #f59e0b;
+
+  /* Background layers */
+  --bg-base:        #03001a;
+  --bg-surface:     rgba(255, 255, 255, 0.03);
+  --bg-card:        rgba(255, 255, 255, 0.04);
+  --bg-elevated:    rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text-primary:   #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-muted:     #9ca3af;
+  --text-faint:     #4b5563;
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle:  rgba(255, 255, 255, 0.05);
+  --border-strong:  rgba(255, 255, 255, 0.15);
+
+  /* Legacy aliases (used by App.css / business logic areas) */
+  --primary-hover:  #6d28d9;
+  --primary-glow:   rgba(139, 92, 246, 0.4);
+  --secondary:      #818cf8;
+  --bg-color:       #070B16;
+  --bg-sidebar:     #0B1220;
+  --bg-elevated-legacy: #121826;
+  --text-main:      #f8fafc;
+  --border-color:   rgba(255, 255, 255, 0.08);
+  --success:        #10b981;
+  --warning:        #f59e0b;
+  --danger:         #ef4444;
+  --font-sans:      'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-
-* {
+/* ── Reset ─────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 72px;
+}
+
 body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.15), transparent 50%);
-  background-attachment: fixed;
-  background-size: cover;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
+/* ── Typography ────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* ── Interactive ───────────────────────────────────── */
 button {
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
 }
 
 a {
-  color: var(--primary);
+  color: var(--primary-light);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 a:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
+  color: var(--text-primary);
 }
 
-/* Glassmorphism utility */
+/* ── Global Utility Classes ────────────────────────── */
+
+/* Glassmorphism card — used by App.jsx business logic views */
 .glass {
   background: var(--bg-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-default);
   border-radius: 20px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Gradients */
+/* Gradient text — used in App.jsx business logic views */
 .text-gradient {
-  background: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 50%, #3b82f6 100%);
+  background: linear-gradient(135deg, #818cf8 0%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  color: transparent;
+}
+
+/* ── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+/* ── Desktop-only helper ───────────────────────────── */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
 }

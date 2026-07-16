@@ -1,87 +1,129 @@
 import React from 'react';
-import { FileText, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Settings, LogOut, ArrowRight } from 'lucide-react';
 
-export default function Navbar({ 
-  firebaseUser, 
-  handleSignOut, 
-  setShowSettings, 
+export default function Navbar({
+  firebaseUser,
+  handleSignOut,
+  setShowSettings,
   currentView,
   setCurrentView,
-  setAnalysisResult 
+  setAnalysisResult
 }) {
+  const goHome = () => {
+    setCurrentView('home');
+    setAnalysisResult('');
+  };
+
   return (
-    <motion.header 
-      className="navbar glass"
+    <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{
-        position: 'sticky',
-        top: '1rem',
-        zIndex: 50,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '1rem 2rem',
-        margin: '0 auto',
-        maxWidth: '1280px',
-        width: 'calc(100% - 2rem)',
-        borderRadius: '20px'
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(3, 0, 26, 0.75)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
       }}
     >
-      <div 
-        className="logo" 
-        onClick={() => { setCurrentView('home'); setAnalysisResult(''); }} 
-        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, fontSize: '1.25rem' }}
-      >
-        <FileText size={24} color="var(--primary)" />
-        <span>Resume <span className="text-gradient-primary">Mentor AI</span></span>
-      </div>
-
-      <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="nav-links">
-        {currentView === 'home' && (
-          <div style={{ display: 'flex', gap: '2rem' }} className="desktop-only">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#faq">FAQ</a>
-          </div>
-        )}
-      </nav>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {firebaseUser ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }} className="desktop-only">
-              {firebaseUser.displayName || firebaseUser.phoneNumber || firebaseUser.email}
-            </span>
-            <button
-              onClick={handleSignOut}
-              className="btn-secondary"
-              title="Sign Out"
-              style={{ padding: '0.5rem 1rem' }}
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        ) : (
-          currentView === 'home' && (
-            <button 
-              className="btn-primary" 
-              onClick={() => setCurrentView('api-key')}
-            >
-              Get Started
-            </button>
-          )
-        )}
-        <button 
-          className="btn-secondary" 
-          onClick={() => setShowSettings(true)}
-          title="Settings"
-          style={{ padding: '0.5rem 1rem' }}
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 2rem',
+        height: '68px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '2rem',
+      }}>
+        {/* Brand */}
+        <div
+          onClick={goHome}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}
         >
-          <Settings size={18} />
-        </button>
+          <div style={{
+            width: '36px', height: '36px', borderRadius: '9px',
+            background: 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: '800', fontSize: '0.85rem', color: '#fff', letterSpacing: '-0.5px'
+          }}>
+            RM
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#fff', lineHeight: 1.2 }}>Resume Mentor AI</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', lineHeight: 1 }}>AI Career Assistant</div>
+          </div>
+        </div>
+
+        {/* Nav links (home only) */}
+        {currentView === 'home' && (
+          <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="desktop-only">
+            <a href="#features" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Features</a>
+            <a href="#how-it-works" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>How It Works</a>
+            <a href="#pricing" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Pricing</a>
+            <a href="#testimonials" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Testimonials</a>
+            <a href="#faq" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>FAQ</a>
+          </nav>
+        )}
+
+        {/* Right actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+          {firebaseUser ? (
+            <>
+              <span style={{ fontSize: '0.8rem', color: '#9ca3af', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="desktop-only">
+                {firebaseUser.displayName || firebaseUser.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                title="Sign Out"
+                style={{
+                  padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '9999px',
+                  color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  fontSize: '0.85rem', fontWeight: 500, transition: 'all .2s'
+                }}
+              >
+                <LogOut size={14} /> Sign Out
+              </button>
+            </>
+          ) : (
+            currentView === 'home' && (
+              <button
+                onClick={() => setCurrentView('api-key')}
+                style={{
+                  padding: '0.6rem 1.5rem',
+                  background: 'linear-gradient(90deg, #4f46e5, #ec4899)',
+                  border: 'none', borderRadius: '9999px',
+                  color: '#fff', cursor: 'pointer',
+                  fontFamily: 'inherit', fontWeight: 600, fontSize: '0.9rem',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  boxShadow: '0 4px 16px rgba(236,72,153,0.35)',
+                  transition: 'transform .2s, box-shadow .2s'
+                }}
+              >
+                Get Started <ArrowRight size={15} />
+              </button>
+            )
+          )}
+
+          <button
+            onClick={() => setShowSettings(true)}
+            title="Settings"
+            style={{
+              padding: '0.5rem', background: 'transparent', border: 'none',
+              color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              transition: 'color .2s'
+            }}
+          >
+            <Settings size={18} />
+          </button>
+        </div>
       </div>
     </motion.header>
   );

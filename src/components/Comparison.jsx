@@ -1,78 +1,116 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, XCircle, CheckCircle } from 'lucide-react';
+import { XCircle, CheckCircle, ArrowRight } from 'lucide-react';
+
+const BEFORE_ITEMS = [
+  'Missing ATS keywords',
+  'Weak, vague bullet points',
+  'Poor formatting structure',
+  'No quantifiable metrics',
+  'Generic summary section',
+];
+
+const AFTER_ITEMS = [
+  'Optimized keyword density',
+  'Powerful action-verb bullets',
+  'Clean, recruiter-ready layout',
+  'Quantified impact metrics',
+  'Compelling AI-crafted summary',
+];
 
 export default function Comparison() {
   return (
-    <section style={{ padding: '6rem 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '1rem' }}>Before & After</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.125rem' }}>See the difference AI makes in your resume.</p>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-        {/* Before Card */}
-        <motion.div 
-          className="glass-card"
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          style={{ flex: '1 1 300px', padding: '2.5rem', borderTop: '4px solid var(--danger)' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-muted)' }}>Original Resume</h3>
-            <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 600 }}>ATS: 61%</div>
-          </div>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
-              <XCircle size={20} color="var(--danger)" /> Missing Keywords
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
-              <XCircle size={20} color="var(--danger)" /> Weak Summary
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
-              <XCircle size={20} color="var(--danger)" /> Poor Formatting
-            </li>
-          </ul>
-        </motion.div>
-
-        {/* Arrow */}
+    <section className="section">
+      <div className="section-inner">
         <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          style={{ padding: '1rem', background: 'rgba(124, 58, 237, 0.1)', borderRadius: '50%', color: 'var(--primary)' }}
+          transition={{ duration: 0.5 }}
         >
-          <ArrowRight size={32} />
+          <div className="badge">✦ The Transformation</div>
+          <h2>
+            Before &amp;{' '}
+            <span className="grad-text">After</span>
+          </h2>
+          <p>See the difference AI makes to your resume — instantly.</p>
         </motion.div>
 
-        {/* After Card */}
-        <motion.div 
-          className="glass-card"
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          style={{ flex: '1 1 300px', padding: '2.5rem', borderTop: '4px solid var(--success)', position: 'relative', overflow: 'hidden' }}
-        >
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.1), transparent 50%)', pointerEvents: 'none' }}></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff' }}>Optimized Resume</h3>
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 600 }}>ATS: 94%</div>
-          </div>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#fff' }}>
-              <CheckCircle size={20} color="var(--success)" /> Optimized Keywords
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#fff' }}>
-              <CheckCircle size={20} color="var(--success)" /> Professional Summary
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#fff' }}>
-              <CheckCircle size={20} color="var(--success)" /> Improved Formatting
-            </li>
-          </ul>
-        </motion.div>
+        <div className="compare-grid">
+          {/* Before */}
+          <motion.div
+            className="compare-card before"
+            initial={{ opacity: 0, x: -28 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ color: '#9ca3af', fontWeight: 700, fontSize: '1.05rem', margin: 0 }}>
+                Original Resume
+              </h3>
+              <span style={{
+                background: 'rgba(239,68,68,0.15)',
+                color: '#ef4444',
+                padding: '0.2rem 0.7rem',
+                borderRadius: '9999px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+              }}>
+                ATS: 61%
+              </span>
+            </div>
+            {BEFORE_ITEMS.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                <XCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
+                {t}
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Arrow */}
+          <motion.div
+            className="compare-arrow-wrap"
+            initial={{ opacity: 0, scale: 0.4 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <ArrowRight size={20} color="#818cf8" />
+          </motion.div>
+
+          {/* After */}
+          <motion.div
+            className="compare-card after"
+            initial={{ opacity: 0, x: 28 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, delay: 0.15 }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', margin: 0 }}>
+                Optimized Resume
+              </h3>
+              <span style={{
+                background: 'rgba(16,185,129,0.15)',
+                color: '#10b981',
+                padding: '0.2rem 0.7rem',
+                borderRadius: '9999px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+              }}>
+                ATS: 94%
+              </span>
+            </div>
+            {AFTER_ITEMS.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#d1d5db', fontSize: '0.9rem' }}>
+                <CheckCircle size={18} color="#10b981" style={{ flexShrink: 0 }} />
+                {t}
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </div>
     </section>
   );

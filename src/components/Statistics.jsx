@@ -1,33 +1,32 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function Statistics() {
-  const stats = [
-    { value: '10000+', label: 'Resumes Analyzed' },
-    { value: '95%', label: 'ATS Improvement' },
-    { value: '4.9★', label: 'Average Rating' },
-    { value: '2 min', label: 'Average Processing Time' },
-  ];
+const STATS = [
+  { value: '10,000+', label: 'Resumes Analyzed' },
+  { value: '95%',     label: 'ATS Improvement Rate' },
+  { value: '4.9★',   label: 'Average User Rating' },
+  { value: '< 60s',  label: 'Average Analysis Time' },
+];
 
+export default function Statistics() {
   return (
-    <section style={{ padding: '4rem 0' }}>
-      <div className="glass-card" style={{ padding: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', textAlign: 'center', background: 'rgba(124, 58, 237, 0.05)' }}>
-        {stats.map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1, duration: 0.4 }}
-          >
-            <div style={{ fontSize: '3rem', fontWeight: 800, color: '#fff', marginBottom: '0.5rem', background: 'linear-gradient(135deg, #fff 0%, var(--primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              {stat.value}
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {stat.label}
-            </div>
-          </motion.div>
-        ))}
+    <section className="section" style={{ paddingTop: 0 }}>
+      <div className="section-inner">
+        <div className="stats-strip">
+          {STATS.map((stat, i) => (
+            <motion.div
+              key={i}
+              className="stat-item"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: i * 0.1 }}
+            >
+              <div className="stat-number">{stat.value}</div>
+              <div className="stat-label">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

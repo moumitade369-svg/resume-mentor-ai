@@ -1,45 +1,120 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Zap, TrendingUp, Sparkles, Target, Download } from 'lucide-react';
+import { Search, Sparkles, Target, BarChart2, FileText, CheckCircle } from 'lucide-react';
+
+const FEATURES = [
+  {
+    Icon: Search,
+    color: '#22d3ee',
+    bg: 'rgba(34,211,238,0.1)',
+    border: 'rgba(34,211,238,0.25)',
+    glow: 'rgba(34,211,238,0.2)',
+    title: 'ATS Optimization',
+    desc: 'Our AI scans your resume against ATS algorithms to ensure it gets past the robots and reaches human eyes.',
+  },
+  {
+    Icon: Sparkles,
+    color: '#818cf8',
+    bg: 'rgba(129,140,248,0.1)',
+    border: 'rgba(129,140,248,0.25)',
+    glow: 'rgba(129,140,248,0.2)',
+    title: 'Smart AI Rewriting',
+    desc: 'Automatically enhance your bullet points with powerful action verbs and quantifiable metrics that recruiters love.',
+  },
+  {
+    Icon: Target,
+    color: '#ec4899',
+    bg: 'rgba(236,72,153,0.1)',
+    border: 'rgba(236,72,153,0.25)',
+    glow: 'rgba(236,72,153,0.2)',
+    title: 'Keyword Matching',
+    desc: 'Identifies missing keywords from job descriptions and suggests exactly where to add them for maximum impact.',
+  },
+  {
+    Icon: BarChart2,
+    color: '#10b981',
+    bg: 'rgba(16,185,129,0.1)',
+    border: 'rgba(16,185,129,0.25)',
+    glow: 'rgba(16,185,129,0.2)',
+    title: 'Detailed Analytics',
+    desc: 'Get a comprehensive score breakdown of your resume with specific areas flagged for improvement.',
+  },
+  {
+    Icon: FileText,
+    color: '#f59e0b',
+    bg: 'rgba(245,158,11,0.1)',
+    border: 'rgba(245,158,11,0.25)',
+    glow: 'rgba(245,158,11,0.2)',
+    title: 'AI Cover Letters',
+    desc: 'Generate highly customized, professional cover letters tailored to each job description automatically.',
+  },
+  {
+    Icon: CheckCircle,
+    color: '#6366f1',
+    bg: 'rgba(99,102,241,0.1)',
+    border: 'rgba(99,102,241,0.25)',
+    glow: 'rgba(99,102,241,0.2)',
+    title: 'Formatting Fixes',
+    desc: 'Ensures your resume layout is clean, consistent, and professional — ready for any recruiter or ATS system.',
+  },
+];
 
 export default function Features() {
-  const features = [
-    { icon: <FileText size={32} />, title: 'AI Resume Analysis', desc: 'Deep scan of your resume content, structure, and formatting.' },
-    { icon: <Zap size={32} />, title: 'ATS Optimization', desc: 'Ensure your resume passes Applicant Tracking Systems.' },
-    { icon: <TrendingUp size={32} />, title: 'Resume Improvement', desc: 'Let AI rewrite and elevate your professional experience.' },
-    { icon: <Target size={32} />, title: 'Keyword Scanner', desc: 'Identify missing skills and keywords for your target role.' },
-    { icon: <Sparkles size={32} />, title: 'AI Suggestions', desc: 'Actionable tips to make your resume stand out to recruiters.' },
-    { icon: <Download size={32} />, title: 'Download PDF', desc: 'Export your optimized resume in a clean, professional format.' },
-  ];
-
   return (
-    <section id="features" style={{ padding: '6rem 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '1rem' }}>Premium Features</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.125rem', maxWidth: '600px', margin: '0 auto' }}>Everything you need to craft a winning resume in one powerful platform.</p>
-      </div>
+    <section id="features" className="section">
+      <div className="section-inner">
+        {/* Heading */}
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="badge">✦ Core Features</div>
+          <h2>
+            Why Choose{' '}
+            <span className="grad-text">Resume Mentor AI</span>
+          </h2>
+          <p>
+            Everything you need to craft the perfect resume and land your
+            dream job faster with AI-powered precision.
+          </p>
+        </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-        {features.map((feature, index) => (
-          <motion.div
-            key={index}
-            className="glass-card"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5, boxShadow: '0 10px 30px rgba(124,58,237,0.15)', borderColor: 'rgba(124,58,237,0.3)' }}
-            style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', cursor: 'default' }}
-          >
-            <div style={{ color: 'var(--primary)', background: 'rgba(124, 58, 237, 0.1)', width: '64px', height: '64px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {feature.icon}
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem' }}>{feature.title}</h3>
-              <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{feature.desc}</p>
-            </div>
-          </motion.div>
-        ))}
+        {/* Grid */}
+        <div className="feat-grid">
+          {FEATURES.map(({ Icon, color, bg, border, glow, title, desc }, i) => (
+            <motion.div
+              key={i}
+              className="feat-card"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              whileHover={{
+                y: -4,
+                boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 24px ${glow}`,
+                borderColor: border,
+              }}
+            >
+              {/* Icon box */}
+              <div
+                className="feat-icon-box"
+                style={{
+                  background: bg,
+                  border: `1px solid ${border}`,
+                  boxShadow: `0 0 16px ${glow}`,
+                }}
+              >
+                <Icon size={22} color={color} />
+              </div>
+
+              <h3 className="feat-title">{title}</h3>
+              <p className="feat-desc">{desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

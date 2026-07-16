@@ -1,105 +1,100 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import DashboardPreview from './DashboardPreview';
 
 export default function Hero({ setCurrentView }) {
   return (
-    <section className="hero-section" style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      minHeight: '80vh',
-      gap: '4rem',
-      padding: '4rem 0'
-    }}>
-      <div className="hero-content" style={{ flex: 1, maxWidth: '600px' }}>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="hero-badge"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(124, 58, 237, 0.1)',
-            border: '1px solid rgba(124, 58, 237, 0.2)',
-            padding: '0.5rem 1rem',
-            borderRadius: '9999px',
-            color: 'var(--accent)',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            marginBottom: '2rem'
-          }}
-        >
-          ✨ AI Powered Resume Intelligence
-        </motion.div>
+    <section className="hero-section">
+      {/* ── Left copy ── */}
+      <motion.div
+        className="hero-content"
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.65, ease: 'easeOut' }}
+      >
+        {/* Badge */}
+        <div className="hero-badge">
+          <Sparkles size={13} color="#818cf8" />
+          AI-Powered Career Assistant
+        </div>
 
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          style={{
-            fontSize: '4.5rem',
-            lineHeight: 1.1,
-            fontWeight: 800,
-            marginBottom: '1.5rem',
-            letterSpacing: '-0.02em'
-          }}
-        >
-          Build ATS-Friendly Resumes <br />
-          <span className="text-gradient">That Get More Interviews</span>
-        </motion.h1>
+        {/* Headline */}
+        <h1 className="hero-h1">
+          Your Resume.<br />
+          Our AI.<br />
+          Your{' '}
+          <span className="grad-text">Dream Job.</span>
+        </h1>
 
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          style={{
-            fontSize: '1.125rem',
-            color: 'var(--text-muted)',
-            lineHeight: 1.6,
-            marginBottom: '2.5rem'
-          }}
-        >
-          Upload your resume and let AI analyze, optimize, rewrite, improve ATS compatibility, identify missing keywords, and generate a professional report within seconds.
-        </motion.p>
+        {/* Sub-copy */}
+        <p className="hero-sub">
+          Get AI-powered resume analysis, boost your ATS score, and land
+          your dream job faster with our premium career assistant.
+        </p>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}
-        >
-          <button 
-            className="btn-primary" 
-            style={{ fontSize: '1.125rem', padding: '1rem 2rem', borderRadius: '50px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        {/* CTA row */}
+        <div className="hero-actions">
+          <button
+            id="hero-get-started"
+            className="btn-cta"
             onClick={() => setCurrentView && setCurrentView('api-key')}
           >
-            Get Started <ArrowRight size={20} />
+            🚀 Get Started Free
           </button>
-          <button className="btn-secondary" style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}>
-            View Demo
-          </button>
-        </motion.div>
 
-        <motion.div 
+          {/* Decorative hand-drawn arrow */}
+          <svg
+            width="52"
+            height="34"
+            viewBox="0 0 52 34"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ opacity: 0.65, flexShrink: 0 }}
+          >
+            <path
+              d="M4 26 C12 6 36 2 48 16"
+              stroke="#ec4899"
+              strokeWidth="2"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <path
+              d="M42 9 L48 16 L38 20"
+              stroke="#ec4899"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </div>
+
+        {/* Social proof line */}
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          style={{ marginTop: '2rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          style={{
+            marginTop: '2.25rem',
+            fontSize: '0.82rem',
+            color: '#6b7280',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
         >
-          <div style={{ color: '#F59E0B', letterSpacing: '2px', marginBottom: '0.5rem' }}>★★★★★</div>
-          <p>Trusted by students, job seekers, freshers, and professionals.</p>
-        </motion.div>
-      </div>
+          <span style={{ color: '#f59e0b' }}>★★★★★</span>
+          Trusted by 10,000+ professionals · No credit card required
+        </motion.p>
+      </motion.div>
 
-      <motion.div 
+      {/* ── Right dashboard mockup ── */}
+      <motion.div
         className="hero-image"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        style={{ flex: 1, display: 'flex', justifyContent: 'center' }}
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
       >
         <DashboardPreview />
       </motion.div>
