@@ -353,3 +353,24 @@ ${jobDescription}
     throw error;
   }
 };
+
+export const testApiKey = async (apiKey) => {
+  if (!apiKey) throw new Error('API Key is missing.');
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Hello" }] }],
+      }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Invalid API Key.');
+    }
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+

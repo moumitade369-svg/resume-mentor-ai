@@ -1,11 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, LogOut, ArrowRight } from 'lucide-react';
+import { Settings, ArrowRight, CheckCircle } from 'lucide-react';
 
 export default function Navbar({
-  firebaseUser,
-  handleSignOut,
-  setShowSettings,
+  hasApiKey,
   currentView,
   setCurrentView,
   setAnalysisResult
@@ -74,24 +72,13 @@ export default function Navbar({
 
         {/* Right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-          {firebaseUser ? (
-            <>
-              <span style={{ fontSize: '0.8rem', color: '#9ca3af', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="desktop-only">
-                {firebaseUser.displayName || firebaseUser.email}
-              </span>
-              <button
-                onClick={handleSignOut}
-                title="Sign Out"
-                style={{
-                  padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '9999px',
-                  color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  fontSize: '0.85rem', fontWeight: 500, transition: 'all .2s'
-                }}
-              >
-                <LogOut size={14} /> Sign Out
-              </button>
-            </>
+          {hasApiKey ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16, 185, 129, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '9999px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <CheckCircle size={14} color="#10b981" />
+                <span style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 500 }}>API Connected</span>
+              </div>
+            </div>
           ) : (
             currentView === 'home' && (
               <button
@@ -112,17 +99,19 @@ export default function Navbar({
             )
           )}
 
-          <button
-            onClick={() => setShowSettings(true)}
-            title="Settings"
-            style={{
-              padding: '0.5rem', background: 'transparent', border: 'none',
-              color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center',
-              transition: 'color .2s'
-            }}
-          >
-            <Settings size={18} />
-          </button>
+          {hasApiKey && (
+            <button
+              onClick={() => setCurrentView('upload')} // Navigates to dashboard basically if on home
+              title="Dashboard"
+              style={{
+                padding: '0.5rem', background: 'transparent', border: 'none',
+                color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                transition: 'color .2s'
+              }}
+            >
+              <Settings size={18} />
+            </button>
+          )}
         </div>
       </div>
     </motion.header>

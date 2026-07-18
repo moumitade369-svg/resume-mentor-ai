@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import DashboardPreview from './DashboardPreview';
 
-export default function Hero({ setCurrentView }) {
+export default function Hero({ setCurrentView, hasApiKey }) {
   return (
     <section className="hero-section">
       {/* ── Left copy ── */}
@@ -38,7 +38,7 @@ export default function Hero({ setCurrentView }) {
           <button
             id="hero-get-started"
             className="btn-cta"
-            onClick={() => setCurrentView && setCurrentView('api-key')}
+            onClick={() => setCurrentView && setCurrentView(hasApiKey ? 'upload' : 'api-key')}
           >
             🚀 Get Started Free
           </button>

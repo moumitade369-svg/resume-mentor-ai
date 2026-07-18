@@ -1,8 +1,7 @@
 import React from 'react';
 import { Search, Bell, User } from 'lucide-react';
 
-export default function TopHeader({ firebaseUser, onSettingsClick, onSignOut }) {
-  const displayName = firebaseUser?.displayName || firebaseUser?.email?.split('@')[0] || 'User';
+export default function TopHeader({ hasApiKey, onSettingsClick }) {
 
   return (
     <div style={{
@@ -14,7 +13,7 @@ export default function TopHeader({ firebaseUser, onSettingsClick, onSignOut }) 
     }}>
       <div>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          Welcome back, <span className="text-gradient">{displayName}</span> 👋
+          Welcome back 👋
         </h1>
         <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>Here's what's happening with your resume today.</p>
       </div>

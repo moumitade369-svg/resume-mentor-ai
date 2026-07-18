@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './services/firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { UploadCloud, FileText, Settings, X, CheckCircle, AlertCircle, Loader2, Download, Briefcase, BarChart, Sparkles, RefreshCw, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { extractTextFromFile } from './services/fileParser';
-import { analyzeResume, improveResume, analyzeMatchReport, generateJobSpecificResume, generateCoverLetter } from './services/gemini';
+import { analyzeResume, improveResume, analyzeMatchReport, generateJobSpecificResume, generateCoverLetter, testApiKey } from './services/gemini';
 import { generatePDFReport, generateImprovedResumePDF } from './services/pdfGenerator';
 import './App.css';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import ApiSetupWizard from './components/ApiSetupWizard';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
 import Comparison from './components/Comparison';
@@ -69,56 +68,33 @@ function App() {
 
   const [currentView, setCurrentView] = useState('home');
   const [activeSidebarItem, setActiveSidebarItem] = useState('upload');
-  const [tempApiKey, setTempApiKey] = useState('');
-  const [showApiPassword, setShowApiPassword] = useState(false);
-  const [apiKeyError, setApiKeyError] = useState('');
-  const [apiKeySuccess, setApiKeySuccess] = useState(false);
-
-  // Firebase Authentication state
-  const [firebaseUser, setFirebaseUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user || null);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      setFirebaseUser(null);
-    } catch (err) {
-      console.error('Sign out error:', err);
-    }
-  };
-
-  const handleValidateApiKey = () => {
-    if (!tempApiKey.trim()) {
-      setApiKeyError('Please enter your Gemini API Key.');
-      setApiKeySuccess(false);
-    } else {
-      setApiKeyError('');
-      setApiKeySuccess(true);
-      setApiKey(tempApiKey.trim());
-      localStorage.setItem('gemini_api_key', tempApiKey.trim());
-      setTimeout(() => {
-        setCurrentView('upload');
-        setApiKeySuccess(false);
-      }, 1000);
-    }
-  };
-
+  const [apiLastVerified, setApiLastVerified] = useState('');
+  
   // Load API key from local storage on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    if (storedKey) setApiKey(storedKey);
+    const storedTime = localStorage.getItem('gemini_api_verified');
+    if (storedKey) {
+      setApiKey(storedKey);
+      if (storedTime) setApiLastVerified(storedTime);
+    }
   }, []);
 
-  const saveApiKey = (key) => {
+  const handleCompleteWizard = (key) => {
+    const now = new Date().toLocaleString();
     setApiKey(key);
+    setApiLastVerified(now);
     localStorage.setItem('gemini_api_key', key);
-    setShowSettings(false);
+    localStorage.setItem('gemini_api_verified', now);
+    setCurrentView('upload');
+  };
+
+  const handleRemoveApiKey = () => {
+    setApiKey('');
+    setApiLastVerified('');
+    localStorage.removeItem('gemini_api_key');
+    localStorage.removeItem('gemini_api_verified');
+    setCurrentView('api-key');
   };
 
   const handleDragOver = (e) => {
@@ -385,9 +361,7 @@ function App() {
   return (
     <div className="app-container">
       <Navbar 
-          firebaseUser={firebaseUser}
-          handleSignOut={handleSignOut}
-          setShowSettings={setShowSettings}
+          hasApiKey={!!apiKey}
           currentView={currentView}
           setCurrentView={setCurrentView}
           setAnalysisResult={setAnalysisResult}
@@ -400,7 +374,7 @@ function App() {
             <div className="page-bg">
               <div className="star-grid" />
             </div>
-            <Hero setCurrentView={setCurrentView} />
+            <Hero setCurrentView={setCurrentView} hasApiKey={!!apiKey} />
             <Features />
             <HowItWorks />
             <Comparison />
@@ -413,52 +387,8 @@ function App() {
         )}
 
         {!analysisResult && !isAnalyzing && currentView === 'api-key' && (
-          <div className="api-key-page" style={{ animation: 'fadeIn 0.5s ease-out', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-            <div className="api-card glass" style={{ padding: '3rem', maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>🔑 Connect Your Gemini API</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                To use Resume Mentor AI, please enter your Google Gemini API Key before continuing.
-              </p>
-              
-              <div className="input-group" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showApiPassword ? 'text' : 'password'} 
-                    placeholder="Paste your Gemini API Key" 
-                    value={tempApiKey}
-                    onChange={(e) => setTempApiKey(e.target.value)}
-                    style={{ width: '100%', paddingRight: '40px', boxSizing: 'border-box' }}
-                  />
-                  <button 
-                    onClick={() => setShowApiPassword(!showApiPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                  >
-                    👁
-                  </button>
-                </div>
-                {apiKeyError && <p style={{ color: 'var(--danger)', fontSize: '0.9rem', marginTop: '0.5rem' }}>{apiKeyError}</p>}
-                {apiKeySuccess && <p style={{ color: 'var(--success)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Gemini API Key Accepted</p>}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                <button className="btn-primary" onClick={handleValidateApiKey}>
-                  Validate API Key
-                </button>
-                <a 
-                  href="https://aistudio.google.com/app/apikey" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="btn-secondary"
-                  style={{ textDecoration: 'none', display: 'inline-block' }}
-                >
-                  Get Free Gemini API Key
-                </a>
-              </div>
-
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                🔒 Your API key is never stored on our server. It is only used during your current session.
-              </p>
-            </div>
+          <div className="api-key-page" style={{ animation: 'fadeIn 0.5s ease-out', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', padding: '2rem 0' }}>
+            <ApiSetupWizard onComplete={handleCompleteWizard} />
           </div>
         )}
 
@@ -473,9 +403,8 @@ function App() {
             
             <div style={{ flex: 1, padding: '2rem 3rem', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
               <TopHeader 
-                firebaseUser={firebaseUser} 
-                onSettingsClick={() => setShowSettings(true)} 
-                onSignOut={handleSignOut} 
+                hasApiKey={!!apiKey}
+                onSettingsClick={() => setActiveSidebarItem('settings')} 
               />
               
               {/* ── UPLOAD view ── */}
@@ -783,37 +712,67 @@ function App() {
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                       <section className="glass" style={{ padding: '2.5rem', borderRadius: '20px' }}>
                         <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }} className="text-gradient">⚙️ Settings</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Manage your API key and application preferences.</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '560px' }}>
-                          <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)' }}>🔑 Gemini API Key</h3>
-                            <div className="input-group" style={{ marginBottom: '1rem' }}>
-                              <label htmlFor="settingsApiKey">API Key</label>
-                              <input 
-                                type="password"
-                                id="settingsApiKey"
-                                placeholder="Enter your Gemini API Key"
-                                defaultValue={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                style={{ width: '100%', boxSizing: 'border-box' }}
-                              />
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>Your API key is only stored locally and never sent to our servers.</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                              <button className="btn-primary" style={{ width: 'auto' }} onClick={() => saveApiKey(document.getElementById('settingsApiKey').value)}>Save Key</button>
-                              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="btn-secondary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', width: 'auto' }}>Get Free API Key ↗</a>
-                            </div>
-                          </div>
-                          <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)' }}>👤 Account</h3>
-                            {firebaseUser ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Signed in as: <strong style={{ color: 'var(--text-main)' }}>{firebaseUser.displayName || firebaseUser.email || firebaseUser.phoneNumber}</strong></p>
-                                <button className="btn-secondary" style={{ width: 'auto', alignSelf: 'flex-start' }} onClick={handleSignOut}>Sign Out</button>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Manage your AI Connection Settings</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
+                          <div className="glass" style={{ padding: '2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.2rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <Settings size={20} /> AI Connection Settings
+                            </h3>
+                            
+                            {apiKey ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>Provider:</span>
+                                  <span style={{ fontWeight: 600 }}>Google Gemini</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>Status:</span>
+                                  <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={14}/> Connected</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>API Key:</span>
+                                  <span style={{ fontFamily: 'monospace' }}>{apiKey ? `${apiKey.substring(0, 6)}****************${apiKey.substring(apiKey.length - 3)}` : 'Not Set'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>Last Verified:</span>
+                                  <span>{apiLastVerified || 'Unknown'}</span>
+                                </div>
                               </div>
                             ) : (
-                              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Not signed in. Authentication is managed on the home page.</p>
+                              <div style={{ padding: '2rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', marginBottom: '2rem' }}>
+                                <AlertCircle size={32} color="#ef4444" style={{ marginBottom: '1rem' }} />
+                                <h4 style={{ color: '#ef4444', margin: '0 0 0.5rem' }}>Not Connected</h4>
+                                <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>Please connect your Gemini API Key to use the application.</p>
+                              </div>
                             )}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                              {!apiKey ? (
+                                <button className="btn-primary" style={{ gridColumn: '1 / -1' }} onClick={() => setCurrentView('api-key')}>Connect API Key</button>
+                              ) : (
+                                <>
+                                  <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={async () => {
+                                    try {
+                                      await testApiKey(apiKey);
+                                      const now = new Date().toLocaleString();
+                                      setApiLastVerified(now);
+                                      localStorage.setItem('gemini_api_verified', now);
+                                      alert('Connection successful!');
+                                    } catch(err) {
+                                      alert('Connection failed: ' + err.message);
+                                    }
+                                  }}>
+                                    <RefreshCw size={16} /> Test Connection
+                                  </button>
+                                  <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={() => setCurrentView('api-key')}>
+                                    <Settings size={16} /> Change API Key
+                                  </button>
+                                  <button className="btn-secondary" style={{ gridColumn: '1 / -1', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={handleRemoveApiKey}>
+                                    <X size={16} /> Remove API Key
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </section>
