@@ -22,6 +22,8 @@ import TopHeader from './components/TopHeader';
 import UploadCard from './components/UploadCard';
 import ATSScoreCard from './components/ATSScoreCard';
 import { motion } from 'framer-motion';
+import Blog from './components/Blog';
+import BlogPost from './components/BlogPost';
 
 function App() {
 
@@ -357,6 +359,15 @@ function App() {
         });
     }
   };
+
+  if (window.location.pathname.startsWith('/blog/')) {
+    const slug = window.location.pathname.split('/blog/')[1].replace(/\/$/, '');
+    return <BlogPost slug={slug} hasApiKey={!!apiKey} />;
+  }
+
+  if (window.location.pathname === '/blog') {
+    return <Blog hasApiKey={!!apiKey} />;
+  }
 
   return (
     <div className="app-container">

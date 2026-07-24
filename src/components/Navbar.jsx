@@ -59,14 +59,19 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Nav links (home only) */}
-        {currentView === 'home' && (
+        {/* Nav links */}
+        {(currentView === 'home' || currentView === 'blog') && (
           <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="desktop-only">
-            <a href="#features" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Features</a>
-            <a href="#how-it-works" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>How It Works</a>
-            <a href="#pricing" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Pricing</a>
-            <a href="#testimonials" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Testimonials</a>
-            <a href="#faq" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>FAQ</a>
+            {currentView === 'blog' ? (
+              <a href="/" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Home</a>
+            ) : (
+              <>
+                <a href="#features" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Features</a>
+                <a href="#how-it-works" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>How It Works</a>
+                <a href="#pricing" style={{ color: '#d1d5db', fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none', transition: 'color .2s' }}>Pricing</a>
+              </>
+            )}
+            <a href="/blog" style={{ color: currentView === 'blog' ? '#fff' : '#d1d5db', fontSize: '0.9rem', fontWeight: currentView === 'blog' ? 600 : 500, textDecoration: 'none', transition: 'color .2s' }}>Blog</a>
           </nav>
         )}
 
