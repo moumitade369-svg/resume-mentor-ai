@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import { blogPosts } from '../data/blogPosts';
 import Navbar from './Navbar';
@@ -56,8 +57,16 @@ export default function BlogPost({ slug, hasApiKey }) {
         }}>
 
           {post ? (
-            /* ── Article found ─────────────────────────────── */
-            <>
+  <>
+    <Helmet>
+      <title>{post.seoTitle}</title>
+      <meta
+        name="description"
+        content={post.seoDescription}
+      />
+    </Helmet>
+            {/* ── Article found ─────────────────────────────── */}
+
               <a href="/blog" style={{
                 color: '#818cf8',
                 textDecoration: 'none',
@@ -75,7 +84,7 @@ export default function BlogPost({ slug, hasApiKey }) {
               <div style={{ marginBottom: '2rem', borderRadius: '20px', overflow: 'hidden', height: '400px', width: '100%' }}>
                 <img
                   src={post.imageUrl}
-                  alt={post.title}
+                  alt={post.imageAlt}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               </div>
