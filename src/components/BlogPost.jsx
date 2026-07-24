@@ -30,6 +30,23 @@ class ErrorBoundary extends Component {
 export default function BlogPost({ slug, hasApiKey }) {
   const post = blogPosts.find(p => p.id === slug);
 
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: post?.seoTitle,
+  description: post?.seoDescription,
+  image: post?.imageUrl,
+  author: {
+    "@type": "Organization",
+    name: "Resume Mentor Team"
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "Resume Mentor AI"
+  },
+  mainEntityOfPage: `https://resumementorai.netlify.app/blog/${post?.id}`
+};
+
   return (
     <ErrorBoundary>
       <div className="redesign-root" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -59,12 +76,63 @@ export default function BlogPost({ slug, hasApiKey }) {
           {post ? (
   <>
     <Helmet>
-      <title>{post.seoTitle}</title>
-      <meta
-        name="description"
-        content={post.seoDescription}
-      />
-    </Helmet>
+  <title>{post.seoTitle}</title>
+
+  <meta
+    name="description"
+    content={post.seoDescription}
+  />
+
+  <link
+    rel="canonical"
+    href={`https://resumementorai.netlify.app/blog/${post.id}`}
+  />
+
+  <meta property="og:type" content="article" />
+
+  <meta
+    property="og:title"
+    content={post.seoTitle}
+  />
+
+  <meta
+    property="og:description"
+    content={post.seoDescription}
+  />
+
+  <meta
+    property="og:url"
+    content={`https://resumementorai.netlify.app/blog/${post.id}`}
+  />
+
+  <meta
+    property="og:image"
+    content={post.imageUrl}
+  />
+<meta
+  name="twitter:card"
+  content="summary_large_image"
+/>
+
+<meta
+  name="twitter:title"
+  content={post.seoTitle}
+/>
+
+<meta
+  name="twitter:description"
+  content={post.seoDescription}
+/>
+
+<meta
+  name="twitter:image"
+  content={post.imageUrl}
+/>
+<script type="application/ld+json">
+  {JSON.stringify(articleSchema)}
+</script>
+
+</Helmet>
             {/* ── Article found ─────────────────────────────── */}
 
               <a href="/blog" style={{
