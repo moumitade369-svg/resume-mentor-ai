@@ -1,7 +1,7 @@
 export const blogPosts = [
   {
-    id: "how-to-improve-your-resume-with-ai-2026",
-    title: "How to Improve Your Resume with AI in 2026",
+    id: "improve-resume-with-ai",
+    title: "How to Improve Your Resume with AI",
     excerpt: "Learn how AI can help you improve your resume, increase your ATS score, and land more interviews.",
     author: "Resume Mentor Team",
     date: "July 24, 2026",
